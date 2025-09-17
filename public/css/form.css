@@ -1,0 +1,18 @@
+/* Estilos específicos para formularios */
+.form-group {
+    margin-bottom: 20px; /* Espacio entre los grupos de formulario */
+}
+
+.form-row {
+    margin-bottom: 20px; /* Espacio entre filas de formulario */
+}
+
+.form-control {
+    padding: 10px; /* Padding para los campos de entrada */
+    border: 1px solid #ddd; /* Borde para los campos de entrada */
+    border-radius: 4px; /* Bordes redondeados */
+}
+
+.btn {
+    margin-top: 20px; /* Espacio adicional para los botones */
+}
