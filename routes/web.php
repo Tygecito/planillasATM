@@ -7,7 +7,7 @@ use App\Http\Controllers\NominaController;
 use App\Http\Controllers\PlanillaController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\PermisoController;
-use App\Http\Controllers\UsuarioController; // Asegúrate de importar el controlador de usuarios
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas de autenticación
@@ -30,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Módulo de Nóminas
     Route::resource('nominas', NominaController::class);
+    Route::get('nominas/{id}/download', [NominaController::class, 'download'])->name('nominas.download'); // ← AÑADE ESTA LÍNEA
 
     // Módulo de Planillas
     Route::resource('planillas', PlanillaController::class);

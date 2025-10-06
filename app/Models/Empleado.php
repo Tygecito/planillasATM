@@ -10,16 +10,21 @@ class Empleado extends Model
     use HasFactory;
 
     protected $fillable = [
-        'empresa_id', 'nombres', 'primerapellido', 'segundoapellido', 'sucursal', 
+        'nombres', 'primerapellido', 'segundoapellido', 'sucursal', 
         'fecha_ingreso', 'caja_de_salud', 'tipo_de_contrato', 'modalidad_contrato', 
         'cargo_laboral', 'fecha_de_nacimiento', 'genero', 'estado_civil', 
         'documento_identidad', 'telefono', 'direccion', 'email', 'foto', 'estado',
-        'fecha_creacion', 'fecha_modificacion' // Asegúrate de incluir estos campos
+        'fecha_creacion', 'fecha_modificacion'
     ];
 
-    public $timestamps = false; // Desactiva el uso de created_at y updated_at
+    public $timestamps = false;
 
-    // Si deseas manejar la creación y actualización manualmente
+    // Relación con el modelo Usuario
+    public function usuario()
+    {
+        return $this->hasOne(Usuario::class, 'empleado_id');
+    }
+
     public function setCreatedAt($value)
     {
         $this->fecha_creacion = $value;

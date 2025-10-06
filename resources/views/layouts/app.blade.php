@@ -8,6 +8,7 @@
     <!-- Incluir el CSS común -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/form.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/nominas.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- CSS específico por página -->
@@ -45,11 +46,13 @@
                         <i class="fas fa-tachometer-alt"></i> Dashboard
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('empresas.index') }}" class="{{ request()->routeIs('empresas.*') ? 'active' : '' }}">
-                        <i class="fas fa-clinic-medical"></i> Empresas
-                    </a>
-                </li>
+                {{-- 
+                           <li>
+                                <a href="{{ route('empresas.index') }}" class="{{ request()->routeIs('empresas.*') ? 'active' : '' }}">
+                                    <i class="fas fa-clinic-medical"></i> Empresas
+                                </a>
+                           </li>
+                --}}
                 <li>
                     <a href="{{ route('empleados.index') }}" class="{{ request()->routeIs('empleados.*') ? 'active' : '' }}">
                         <i class="fas fa-users"></i> Empleados
@@ -105,6 +108,9 @@
         <p>&copy; 2025 Mi Aplicación Laravel. Versión 1.0.0</p>
     </footer>
 
+    <!-- Scripts comunes -->
+    <script src="{{ asset('js/nominas.js') }}"></script>
+    
     <!-- Scripts específicos por página -->
     @stack('scripts')
 </body>

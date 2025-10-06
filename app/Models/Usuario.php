@@ -9,9 +9,9 @@ class Usuario extends Authenticatable
 {
     use Notifiable;
 
-    protected $table = 'usuarios'; // Nombre de tu tabla
+    protected $table = 'usuarios';
     protected $primaryKey = 'id';
-    public $timestamps = false; // Usamos fecha_creacion y fecha_modificacion
+    public $timestamps = false;
 
     protected $fillable = [
         'username',
@@ -21,7 +21,7 @@ class Usuario extends Authenticatable
     ];
 
     protected $hidden = [
-        'password' // Ocultar la contraseña en las respuestas JSON
+        'password'
     ];
 
     // Relación con el modelo Empleado
@@ -30,7 +30,6 @@ class Usuario extends Authenticatable
         return $this->belongsTo(Empleado::class, 'empleado_id');
     }
 
-    // Método para obtener el nombre completo del empleado
     public function getFullNameAttribute()
     {
         if ($this->empleado) {

@@ -1,29 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'Empleados - Mi App')
+@section('title', 'Gestión de Empleados y Usuarios')
 
 @section('content')
-    <h1 class="welcome-message">Gestión de Empleados</h1>
-    
+    <h1 class="welcome-message">Gestión de Empleados y Usuarios</h1>
+
     <div class="card">
         <div class="search-bar">
             <form action="{{ route('empleados.index') }}" method="GET">
                 <input type="text" name="search" placeholder="Buscar empleado..." value="{{ request('search') }}">
-                <select name="empresa_id" id="empresa_id" class="form-control">
-                    <option value="">Seleccione una empresa...</option>
-                    @foreach($empresas as $empresa)
-                        <option value="{{ $empresa->id }}" {{ request('empresa_id') == $empresa->id ? 'selected' : '' }}>
-                            {{ $empresa->nombre }}
-                        </option>
-                    @endforeach
-                </select>
                 <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
                 <a href="{{ route('empleados.create') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Nuevo Empleado
                 </a>
             </form>
         </div>
-        
+
+        <h2>Gestión de Empleados</h2>
         <div class="table-container">
             <table>
                 <thead>
@@ -31,9 +24,11 @@
                         <th>Nombres</th>
                         <th>Primer Apellido</th>
                         <th>Segundo Apellido</th>
-                        <th>DNI</th>
+                        <th>CI</th>
                         <th>Cargo</th>
                         <th>Estado</th>
+                        <th>Username</th> <!-- Columna para Username -->
+                        <th>Rol</th>      <!-- Columna para Rol -->
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -46,6 +41,8 @@
                         <td>{{ $empleado->documento_identidad }}</td>
                         <td>{{ $empleado->cargo_laboral }}</td>
                         <td>{{ $empleado->estado == 1 ? 'Activo' : 'Inactivo' }}</td>
+                        <td>{{ $empleado->usuario ? $empleado->usuario->username : '' }}</td> <!-- Mostrar en blanco si no hay usuario -->
+                        <td>{{ $empleado->usuario ? ucfirst($empleado->usuario->role) : '' }}</td> <!-- Mostrar en blanco si no hay usuario -->
                         <td>
                             <a href="{{ route('empleados.edit', $empleado->id) }}" class="btn btn-secondary">
                                 <i class="fas fa-edit"></i>
