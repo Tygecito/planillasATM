@@ -90,7 +90,7 @@
                     <option value="Viudo" {{ old('estado_civil', $empleado->estado_civil) == 'Viudo' ? 'selected' : '' }}>Viudo</option>
                     <option value="Unión libre" {{ old('estado_civil', $empleado->estado_civil) == 'Unión libre' ? 'selected' : '' }}>Unión libre</option>
                 </select>
-            </div>
+ </div>
             <div class="form-group">
                 <label for="documento_identidad">Documento de Identidad</label>
                 <input type="text" name="documento_identidad" id="documento_identidad" class="form-control" value="{{ old('documento_identidad', $empleado->documento_identidad) }}" required>

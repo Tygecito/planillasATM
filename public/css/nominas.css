@@ -318,3 +318,148 @@
         gap: 0.5rem;
     }
 }
+
+
+/* === Detalle de Nómina === */
+.detalle-nomina-container {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 25px;
+    margin-bottom: 40px;
+}
+
+.detalle-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(90deg, #942044, #942044);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px 10px 0 0;
+}
+
+.detalle-header h4 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.detalle-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-accion {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    color: #f6f3f3;
+    transition: all 0.3s ease;
+}
+
+.btn-accion.editar { background-color: #198754; }
+.btn-accion.descargar { background-color: #0dcaf0; }
+.btn-accion.cerrar { background-color: #dc3545; }
+
+.btn-accion:hover {
+    opacity: 0.85;
+    transform: translateY(-2px);
+}
+
+.detalle-body {
+    padding: 25px 15px;
+}
+
+.detalle-section {
+    margin-bottom: 25px;
+}
+
+.detalle-section h5 {
+    font-weight: 600;
+    color: #0d6efd;
+    margin-bottom: 15px;
+}
+
+.detalle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    background: #f9fafc;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.detalle-dual {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.detalle-card {
+    background: #d1d3d5;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.detalle-card h5 {
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.detalle-card ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.detalle-card ul li {
+    padding: 6px 0;
+    border-bottom: 1px dashed #ced5dd;
+    font-size: 15px;
+}
+
+.total {
+    margin-top: 15px;
+    font-weight: 700;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.ingreso-total {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.descuento-total {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.liquido-total {
+    background: #cff4fc;
+    color: #055160;
+    margin-top: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .detalle-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .detalle-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .detalle-dual {
+        grid-template-columns: 1fr;
+    }
+}

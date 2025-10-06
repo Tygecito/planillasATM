@@ -5,67 +5,71 @@
 @section('content')
     <h1 class="welcome-message">Gestión de Nóminas</h1>
     
-    @if(isset($nominaDetalle))
-    <!-- SECCIÓN DE DETALLES (solo se muestra cuando hay $nominaDetalle) -->
-    <div class="card mb-4">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>Detalles de Nómina #{{ $nominaDetalle->id }}</h2>
-            <div>
-                <a href="{{ route('nominas.edit', $nominaDetalle->id) }}" class="btn btn-warning">
-                    <i class="fas fa-edit"></i> Modificar
-                </a>
-                <a href="{{ route('nominas.download', $nominaDetalle->id) }}" class="btn btn-secondary">
-                    <i class="fas fa-download"></i> Descargar
-                </a>
-                <button onclick="hideDetails()" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> Cerrar
-                </button>
-            </div>
+                @if(isset($nominaDetalle))
+<div class="detalle-nomina-container">
+    <div class="detalle-header">
+        <h4>🧾 Detalle de Nómina #{{ $nominaDetalle->id }}</h4>
+        <div class="detalle-actions">
+            <a href="{{ route('nominas.edit', $nominaDetalle->id) }}" class="btn-accion editar"><i class="fas fa-edit"></i> Modificar</a>
+            <a href="{{ route('nominas.download', $nominaDetalle->id) }}" class="btn-accion descargar"><i class="fas fa-download"></i> Descargar</a>
+            <button onclick="hideDetails()" class="btn-accion cerrar"><i class="fas fa-times"></i> Cerrar</button>
         </div>
-        
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <h4>Datos del Empleado</h4>
-                    <p><strong>Nombre:</strong> {{ $nominaDetalle->empleado->nombres }} {{ $nominaDetalle->empleado->primerapellido }}</p>
-                    <p><strong>Documento:</strong> {{ $nominaDetalle->empleado->documento_identidad }}</p>
-                    <p><strong>Cargo:</strong> {{ $nominaDetalle->empleado->cargo_laboral }}</p>
-                </div>
-                
-                <div class="col-md-6">
-                    <h4>Periodo</h4>
-                    <p><strong>Mes:</strong> {{ $nominaDetalle->mes }}</p>
-                    <p><strong>Año:</strong> {{ $nominaDetalle->anio }}</p>
-                    <p><strong>Días pagados:</strong> {{ $nominaDetalle->dias_pagados }}</p>
-                    <p><strong>Horas pagadas:</strong> {{ $nominaDetalle->horas_pagadas }}</p>
-                    <p><strong>SMN:</strong>  {{ number_format($nominaDetalle->smn, 2) }}</p>
-                </div>
+    </div>
+
+    <div class="detalle-body">
+        <!-- 🧍 Datos del empleado -->
+        <section class="detalle-section">
+            <h5>🧍 Datos del Empleado</h5>
+            <div class="detalle-grid">
+                <div><strong>Nombre:</strong><br>{{ $nominaDetalle->empleado->nombres }} {{ $nominaDetalle->empleado->primerapellido }}</div>
+                <div><strong>Documento:</strong><br>{{ $nominaDetalle->empleado->documento_identidad }}</div>
+                <div><strong>Cargo:</strong><br>{{ $nominaDetalle->empleado->cargo_laboral }}</div>
             </div>
-            
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <h4>Ingresos</h4>
-                    <p><strong>Haber Básico:</strong>  {{ number_format($nominaDetalle->haber_basico, 2) }}</p>
-                    <p><strong>Bono Antigüedad:</strong>  {{ number_format($nominaDetalle->bono_antiguedad, 2) }}</p>
-                    <p><strong>Trabajo Extraordinario:</strong>  {{ number_format($nominaDetalle->trabajo_extraordinario, 2) }}</p>
-                    <p><strong>Pago Domingo:</strong>  {{ number_format($nominaDetalle->pago_domingo, 2) }}</p>
-                    <p><strong>Otros Bonos:</strong>  {{ number_format($nominaDetalle->otros_bonos, 2) }}</p>
-                    <p><strong>Total Ganado:</strong>  {{ number_format($nominaDetalle->total_ganado, 2) }}</p>
-                </div>
-                
-                <div class="col-md-6">
-                    <h4>Descuentos</h4>
-                    <p><strong>Aporte Laboral:</strong>  {{ number_format($nominaDetalle->aporte_laboral, 2) }}</p>
-                    <p><strong>Aporte Nacional Solidario:</strong>  {{ number_format($nominaDetalle->aporte_nacional_solidario, 2) }}</p>
-                    <p><strong>RC-IVA:</strong>  {{ number_format($nominaDetalle->rc_iva, 2) }}</p>
-                    <p><strong>Anticipos:</strong>  {{ number_format($nominaDetalle->anticipos, 2) }}</p>
-                    <p><strong>Total Descuentos:</strong>  {{ number_format($nominaDetalle->total_descuentos, 2) }}</p>
-                    <p><strong>Líquido Pagable:</strong>  {{ number_format($nominaDetalle->liquido, 2) }}</p>
-                </div>
+        </section>
+
+        <!-- 📅 Periodo -->
+        <section class="detalle-section">
+            <h5>📅 Periodo</h5>
+            <div class="detalle-grid">
+                <div><strong>Mes:</strong><br>{{ $nominaDetalle->mes }}</div>
+                <div><strong>Año:</strong><br>{{ $nominaDetalle->anio }}</div>
+                <div><strong>Días Pagados:</strong><br>{{ $nominaDetalle->dias_pagados }}</div>
+                <div><strong>Horas Pagadas:</strong><br>{{ $nominaDetalle->horas_pagadas }}</div>
+                <div><strong>SMN:</strong><br>{{ number_format($nominaDetalle->smn, 2) }}</div>
+            </div>
+        </section>
+
+        <!-- 💰 Ingresos y 📉 Descuentos -->
+        <div class="detalle-dual">
+            <div class="detalle-card ingresos">
+                <h5>💰 Ingresos</h5>
+                <ul>
+                    <li><strong>Haber Básico:</strong> {{ number_format($nominaDetalle->haber_basico, 2) }}</li>
+                    <li><strong>Bono Antigüedad:</strong> {{ number_format($nominaDetalle->bono_antiguedad, 2) }}</li>
+                    <li><strong>Trabajo Extraordinario:</strong> {{ number_format($nominaDetalle->trabajo_extraordinario, 2) }}</li>
+                    <li><strong>Pago Domingo:</strong> {{ number_format($nominaDetalle->pago_domingo, 2) }}</li>
+                    <li><strong>Otros Bonos:</strong> {{ number_format($nominaDetalle->otros_bonos, 2) }}</li>
+                </ul>
+                <div class="total ingreso-total">Total Ganado: {{ number_format($nominaDetalle->total_ganado, 2) }}</div>
+            </div>
+
+            <div class="detalle-card descuentos">
+                <h5>📉 Descuentos</h5>
+                <ul>
+                    <li><strong>Aporte Laboral:</strong> {{ number_format($nominaDetalle->aporte_laboral, 2) }}</li>
+                    <li><strong>Aporte Nacional Solidario:</strong> {{ number_format($nominaDetalle->aporte_nacional_solidario, 2) }}</li>
+                    <li><strong>RC-IVA:</strong> {{ number_format($nominaDetalle->rc_iva, 2) }}</li>
+                    <li><strong>Anticipos:</strong> {{ number_format($nominaDetalle->anticipos, 2) }}</li>
+                </ul>
+                <div class="total descuento-total">Total Descuentos: {{ number_format($nominaDetalle->total_descuentos, 2) }}</div>
+                <div class="total liquido-total">💵 Líquido Pagable: {{ number_format($nominaDetalle->liquido, 2) }}</div>
             </div>
         </div>
     </div>
-    @endif
+</div>
+@endif
+
+
     
     <div class="card">
         <div class="filter-section">
