@@ -135,7 +135,7 @@ class EmpleadoController extends Controller
         return view('empleados.edit', compact('empleado', 'usuario', 'empleados'));
     }
 
-            public function update(Request $request, Empleado $empleado)
+    public function update(Request $request, Empleado $empleado)
 {
     $validationRules = [
         'nombres' => 'required|string|max:100',
@@ -161,31 +161,45 @@ class EmpleadoController extends Controller
     // Obtener el usuario asociado
     $usuario = $empleado->usuario;
 
-    // Solo validar campos de usuario si es admin y existe usuario
-    if (Auth::user()->role === 'admin' && $usuario) {
-        $validationRules['username'] = 'required|string|max:255|unique:usuarios,username,' . $usuario->id;
-        $validationRules['password'] = 'nullable|string|min:6|confirmed';
-        $validationRules['role'] = 'required|in:admin,user';
+    // Validaciones condicionales según el tipo de usuario
+    if ($usuario) {
+        if (Auth::user()->role === 'admin') {
+            // Caso 1: Admin editando cualquier usuario
+            $validationRules['username'] = 'required|string|max:255|unique:usuarios,username,' . $usuario->id;
+            $validationRules['password'] = 'nullable|string|min:6|confirmed';
+            $validationRules['role'] = 'required|in:admin,user';
+        } elseif (Auth::user()->role === 'user' && Auth::user()->id == $usuario->id) {
+            // Caso 2: Usuario normal editándose a sí mismo - solo contraseña
+            $validationRules['password'] = 'nullable|string|min:6|confirmed';
+            // username y role vienen del formulario pero son readonly/hidden
+        }
+        // Caso 3: Usuario normal editando otro empleado - no se agregan validaciones de usuario
     }
 
     $request->validate($validationRules);
 
-    // Actualiza el empleado
-    $empleado->update($request->except('username', 'password', 'role'));
+    // Actualiza el empleado (excluir campos de usuario)
+    $empleado->update($request->except('username', 'password', 'password_confirmation', 'role'));
 
-    // Verificar si el usuario asociado existe
+    // Actualizar usuario si existe
     if ($usuario) {
         if (Auth::user()->role === 'admin') {
-            // Si es admin, actualizar todos los campos del usuario
+            // Caso 1: Admin - actualizar todos los campos
             $usuario->username = $request->username;
-
+            $usuario->role = $request->role;
+            
             if ($request->filled('password')) {
                 $usuario->password = Hash::make($request->password);
             }
-
-            $usuario->role = $request->role;
+        } elseif (Auth::user()->role === 'user' && Auth::user()->id == $usuario->id) {
+            // Caso 2: Usuario normal editándose a sí mismo - solo contraseña
+            if ($request->filled('password')) {
+                $usuario->password = Hash::make($request->password);
+            }
+            // username y role permanecen iguales (vienen del formulario como hidden/readonly)
         }
-        // Si no es admin, no se modifican los datos del usuario
+        // Caso 3: Usuario normal editando otro empleado - no se modifica el usuario
+        
         $usuario->save();
     }
 

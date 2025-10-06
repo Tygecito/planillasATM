@@ -119,31 +119,57 @@
                 </select>
             </div>
 
-            <!-- Formulario de Usuario - Solo para admin -->
-            @if(Auth::user()->role === 'admin' && $usuario)
-                <h2>Datos del Usuario</h2>
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" name="username" id="username" class="form-control" value="{{ old('username', $usuario->username) }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Contraseña (dejar en blanco para no cambiar)</label>
-                    <input type="password" name="password" id="password" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="password_confirmation">Confirmar Contraseña</label>
-                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="role">Rol</label>
-                    <select name="role" id="role" class="form-control" required>
-                        <option value="admin" {{ old('role', $usuario->role) == 'admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="user" {{ old('role', $usuario->role) == 'user' ? 'selected' : '' }}>User</option>
-                    </select>
-                </div>
-            @else
-                <!-- Campos ocultos para mantener los valores actuales del usuario cuando no es admin -->
-                @if($usuario)
+            <!-- Formulario de Usuario - Diferentes casos -->
+            @if($usuario)
+                <!-- Caso 1: Usuario normal editándose a sí mismo -->
+                @if(Auth::user()->role === 'user' && Auth::user()->id == $usuario->id)
+                    <h2>Mis Datos de Usuario</h2>
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" name="username" id="username" class="form-control" value="{{ old('username', $usuario->username) }}" readonly style="background-color: #e9ecef;">
+                        <small class="text-muted">No puedes cambiar tu username</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Contraseña (dejar en blanco para no cambiar)</label>
+                        <input type="password" name="password" id="password" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="password_confirmation">Confirmar Contraseña</label>
+                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Rol</label>
+                        <input type="text" name="role_display" id="role_display" class="form-control" value="{{ $usuario->role == 'admin' ? 'Administrador' : 'Usuario' }}" readonly style="background-color: #e9ecef;">
+                        <input type="hidden" name="role" value="{{ $usuario->role }}">
+                        <small class="text-muted">No puedes cambiar tu rol</small>
+                    </div>
+
+                <!-- Caso 2: Admin editando cualquier usuario -->
+                @elseif(Auth::user()->role === 'admin')
+                    <h2>Datos del Usuario</h2>
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" name="username" id="username" class="form-control" value="{{ old('username', $usuario->username) }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Contraseña (dejar en blanco para no cambiar)</label>
+                        <input type="password" name="password" id="password" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="password_confirmation">Confirmar Contraseña</label>
+                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Rol</label>
+                        <select name="role" id="role" class="form-control" required>
+                            <option value="admin" {{ old('role', $usuario->role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="user" {{ old('role', $usuario->role) == 'user' ? 'selected' : '' }}>User</option>
+                        </select>
+                    </div>
+
+                <!-- Caso 3: Usuario normal viendo otro usuario (ocultar datos) -->
+                @else
+                    <!-- Campos ocultos para mantener los valores actuales -->
                     <input type="hidden" name="username" value="{{ $usuario->username }}">
                     <input type="hidden" name="role" value="{{ $usuario->role }}">
                 @endif
