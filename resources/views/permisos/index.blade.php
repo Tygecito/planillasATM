@@ -1,91 +1,83 @@
 @extends('layouts.app')
 
-@section('title', 'Vacaciones - Mi App')
+@section('title', 'Gestión de Permisos')
 
 @section('content')
-    <h1 class="welcome-message">Gestión de Vacaciones</h1>
-    
-    <div class="vacation-summary">
-        <div class="summary-card">
-            <h3><i class="fas fa-calendar-check"></i> Días Disponibles</h3>
-            <p>15</p>
-        </div>
-        <div class="summary-card">
-            <h3><i class="fas fa-calendar-times"></i> Días Usados</h3>
-            <p>5</p>
-        </div>
-        <div class="summary-card">
-            <h3><i class="fas fa-calendar-alt"></i> Días Pendientes</h3>
-            <p>3</p>
-        </div>
-    </div>
-    
+
     <div class="card">
-        <div class="filter-section">
-            <select>
-                <option>Seleccionar empleado</option>
-                <option>Juan Pérez</option>
-                <option>María Gómez</option>
-            </select>
-            <select>
-                <option>Seleccionar estado</option>
-                <option>Aprobado</option>
-                <option>Pendiente</option>
-                <option>Rechazado</option>
-            </select>
-            <button class="btn btn-primary"><i class="fas fa-filter"></i> Filtrar</button>
-            <button class="btn btn-primary"><i class="fas fa-plus"></i> Solicitar Vacaciones</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2>Lista de Solicitudes de Permiso</h2>
+            <a href="{{ route('permisos.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Crear Nuevo Permiso
+            </a>
         </div>
-        
+
+        @if (session('success'))
+            <div class="alert approved" style="margin-bottom: 1rem;">
+                {{ session('success') }}
+            </div>
+        @endif
+
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Empleado</th>
+                        <th>Tipo</th>
                         <th>Fecha Inicio</th>
                         <th>Fecha Fin</th>
-                        <th>Días</th>
+                        <th>Días Solicitados</th>
                         <th>Estado</th>
-                        <th>Comentarios</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Juan Pérez</td>
-                        <td>15/01/2025</td>
-                        <td>20/01/2025</td>
-                        <td>5</td>
-                        <td><span class="vacation-status approved">Aprobado</span></td>
-                        <td>Vacaciones programadas</td>
-                        <td>
-                            <button class="btn btn-secondary"><i class="fas fa-edit"></i></button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>María Gómez</td>
-                        <td>10/02/2025</td>
-                        <td>15/02/2025</td>
-                        <td>5</td>
-                        <td><span class="vacation-status pending">Pendiente</span></td>
-                        <td>Esperando aprobación</td>
-                        <td>
-                            <button class="btn btn-secondary"><i class="fas fa-edit"></i></button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Juan Pérez</td>
-                        <td>01/03/2025</td>
-                        <td>10/03/2025</td>
-                        <td>9</td>
-                        <td><span class="vacation-status rejected">Rechazado</span></td>
-                        <td>Periodo de alta demanda</td>
-                        <td>
-                            <button class="btn btn-secondary"><i class="fas fa-edit"></i></button>
-                        </td>
-                    </tr>
+                    @forelse ($permisos as $permiso)
+                        <tr>
+                            <td>{{ $permiso->id }}</td>
+                            <td>{{ $permiso->empleado->nombres }} {{ $permiso->empleado->primerapellido }}</td>
+                            <td>{{ $permiso->tipo_permiso }}</td>
+                            <td>{{ \Carbon\Carbon::parse($permiso->fecha_inicio)->format('d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($permiso->fecha_fin)->format('d/m/Y') }}</td>
+                            <td>{{ number_format($permiso->dias_solicitados, 3) }}</td>
+                            <td>
+                                @php
+                                    $claseEstado = match($permiso->estado) {
+                                        'APROBADO' => 'approved',
+                                        'PENDIENTE' => 'pending',
+                                        'RECHAZADO', 'CANCELADO' => 'rejected',
+                                        default => 'pending',
+                                    };
+                                @endphp
+                                <span class="vacation-status {{ $claseEstado }}">
+                                    {{ $permiso->estado }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ route('permisos.show', $permiso) }}" class="btn btn-secondary" title="Ver Detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ route('permisos.edit', $permiso) }}" class="btn btn-secondary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('permisos.destroy', $permiso) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-secondary" title="Eliminar" onclick="return confirm('¿Estás seguro de que deseas eliminar este permiso?');">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" style="text-align: center;">No se encontraron solicitudes de permiso.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
+
 @endsection
