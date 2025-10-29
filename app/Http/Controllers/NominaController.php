@@ -26,8 +26,8 @@ class NominaController extends Controller
         }
         
         $nominas = $query->orderBy('anio', 'desc')
-                        ->orderByRaw("FIELD(mes, 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre')")
-                        ->paginate(10);
+                         ->orderByRaw("FIELD(mes, 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre')")
+                         ->paginate(10);
         
         return view('nominas.index', compact('nominas'));
     }
@@ -47,23 +47,25 @@ class NominaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'mes' => 'required|string|max:20',
+            'mes' => 'required|string|max:20', // Mes es texto
             'anio' => 'required|integer|min:2000|max:2100',
             'dias_pagados' => 'required|integer|min:1|max:31',
             'horas_pagadas' => 'required|integer|min:0',
             'empleados' => 'required|array',
+            
+            // Reglas para cada empleado dentro del array
             'empleados.*.empleado_id' => 'required|integer|exists:empleados,id',
-            'empleados.*.smn' => 'nullable|numeric|min:0',
-            'empleados.*.haber_basico' => 'required|numeric|min:0',
-            'empleados.*.horas_extras' => 'nullable|integer|min:0',
-            'empleados.*.bono_antiguedad' => 'nullable|numeric|min:0',
-            'empleados.*.trabajo_extraordinario' => 'nullable|numeric|min:0',
-            'empleados.*.pago_domingo' => 'nullable|numeric|min:0',
-            'empleados.*.otros_bonos' => 'nullable|numeric|min:0',
-            'empleados.*.aporte_laboral' => 'nullable|numeric|min:0',
-            'empleados.*.aporte_nacional_solidario' => 'nullable|numeric|min:0',
-            'empleados.*.rc_iva' => 'nullable|numeric|min:0',
-            'empleados.*.anticipos' => 'nullable|numeric|min:0',
+            'empleados.*.smn' => 'nullable|numeric|min:0', // Decimal
+            'empleados.*.haber_basico' => 'required|numeric|min:0', // Decimal
+            'empleados.*.horas_extras' => 'nullable|integer|min:0', // Entero
+            'empleados.*.bono_antiguedad' => 'nullable|numeric|min:0', // Decimal
+            'empleados.*.trabajo_extraordinario' => 'nullable|numeric|min:0', // Decimal
+            'empleados.*.pago_domingo' => 'nullable|numeric|min:0', // Decimal
+            'empleados.*.otros_bonos' => 'nullable|numeric|min:0', // Decimal
+            'empleados.*.aporte_laboral' => 'nullable|numeric|min:0', // Decimal
+            'empleados.*.aporte_nacional_solidario' => 'nullable|numeric|min:0', // Decimal
+            'empleados.*.rc_iva' => 'nullable|numeric|min:0', // Decimal
+            'empleados.*.anticipos' => 'nullable|numeric|min:0', // Decimal
         ]);
 
         $nominasCreadas = 0;
@@ -71,10 +73,10 @@ class NominaController extends Controller
         foreach ($request->empleados as $empleadoId => $datos) {
             // Calcular campos derivados usando haber_basico directamente
             $totalGanado = $datos['haber_basico'] + 
-                          ($datos['bono_antiguedad'] ?? 0) + 
-                          ($datos['trabajo_extraordinario'] ?? 0) + 
-                          ($datos['pago_domingo'] ?? 0) + 
-                          ($datos['otros_bonos'] ?? 0);
+                           ($datos['bono_antiguedad'] ?? 0) + 
+                           ($datos['trabajo_extraordinario'] ?? 0) + 
+                           ($datos['pago_domingo'] ?? 0) + 
+                           ($datos['otros_bonos'] ?? 0);
             
             $totalDescuentos = ($datos['aporte_laboral'] ?? 0) + 
                               ($datos['aporte_nacional_solidario'] ?? 0) + 
@@ -132,8 +134,8 @@ class NominaController extends Controller
         }
         
         $nominas = $query->orderBy('anio', 'desc')
-                        ->orderByRaw("FIELD(mes, 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre')")
-                        ->paginate(10);
+                         ->orderByRaw("FIELD(mes, 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre')")
+                         ->paginate(10);
         
         return view('nominas.index', compact('nominas', 'nominaDetalle'));
     }
@@ -155,37 +157,37 @@ class NominaController extends Controller
     {
         $nomina = Nomina::findOrFail($id);
         
+        // Validaciones numéricas estrictas
         $request->validate([
             'empleado_id' => 'required|integer|exists:empleados,id',
             'mes' => 'required|string|max:20',
             'anio' => 'required|integer|min:2000|max:2100',
-            'smn' => 'nullable|numeric|min:0',
-            'haber_basico' => 'required|numeric|min:0',
-            'horas_pagadas' => 'required|integer|min:0',
-            'horas_extras' => 'nullable|integer|min:0',
-            'dias_pagados' => 'required|integer|min:0|max:31',
-            // 'salario_ganado' eliminado de las validaciones
-            'bono_antiguedad' => 'nullable|numeric|min:0',
-            'trabajo_extraordinario' => 'nullable|numeric|min:0',
-            'pago_domingo' => 'nullable|numeric|min:0',
-            'otros_bonos' => 'nullable|numeric|min:0',
-            'aporte_laboral' => 'nullable|numeric|min:0',
-            'aporte_nacional_solidario' => 'nullable|numeric|min:0',
-            'rc_iva' => 'nullable|numeric|min:0',
-            'anticipos' => 'nullable|numeric|min:0',
+            'smn' => 'nullable|numeric|min:0', // Decimal
+            'haber_basico' => 'required|numeric|min:0', // Decimal
+            'horas_pagadas' => 'required|integer|min:0', // Entero
+            'horas_extras' => 'nullable|integer|min:0', // Entero
+            'dias_pagados' => 'required|integer|min:0|max:31', // Entero
+            'bono_antiguedad' => 'nullable|numeric|min:0', // Decimal
+            'trabajo_extraordinario' => 'nullable|numeric|min:0', // Decimal
+            'pago_domingo' => 'nullable|numeric|min:0', // Decimal
+            'otros_bonos' => 'nullable|numeric|min:0', // Decimal
+            'aporte_laboral' => 'nullable|numeric|min:0', // Decimal
+            'aporte_nacional_solidario' => 'nullable|numeric|min:0', // Decimal
+            'rc_iva' => 'nullable|numeric|min:0', // Decimal
+            'anticipos' => 'nullable|numeric|min:0', // Decimal
         ]);
 
         // Calcular campos derivados usando haber_basico directamente
         $total_ganado = $request->haber_basico + 
-                       ($request->bono_antiguedad ?? 0) + 
-                       ($request->trabajo_extraordinario ?? 0) + 
-                       ($request->pago_domingo ?? 0) + 
-                       ($request->otros_bonos ?? 0);
+                        ($request->bono_antiguedad ?? 0) + 
+                        ($request->trabajo_extraordinario ?? 0) + 
+                        ($request->pago_domingo ?? 0) + 
+                        ($request->otros_bonos ?? 0);
         
         $total_descuentos = ($request->aporte_laboral ?? 0) + 
-                           ($request->aporte_nacional_solidario ?? 0) + 
-                           ($request->rc_iva ?? 0) + 
-                           ($request->anticipos ?? 0);
+                            ($request->aporte_nacional_solidario ?? 0) + 
+                            ($request->rc_iva ?? 0) + 
+                            ($request->anticipos ?? 0);
         
         $liquido = $total_ganado - $total_descuentos;
 
@@ -199,7 +201,6 @@ class NominaController extends Controller
             'horas_pagadas' => $request->horas_pagadas,
             'horas_extras' => $request->horas_extras ?? 0,
             'dias_pagados' => $request->dias_pagados,
-            // 'salario_ganado' eliminado
             'bono_antiguedad' => $request->bono_antiguedad ?? 0,
             'trabajo_extraordinario' => $request->trabajo_extraordinario ?? 0,
             'pago_domingo' => $request->pago_domingo ?? 0,

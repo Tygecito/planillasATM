@@ -1,4 +1,4 @@
-/* Estilos específicos para formularios */
+/* Estilos específicos para formularios (Mantenidos del original) */
 .form-group {
     margin-bottom: 20px; /* Espacio entre los grupos de formulario */
 }
@@ -8,11 +8,113 @@
 }
 
 .form-control {
+    width: 100%; /* Aseguramos que ocupe todo el espacio de su columna */
     padding: 10px; /* Padding para los campos de entrada */
     border: 1px solid #ddd; /* Borde para los campos de entrada */
     border-radius: 4px; /* Bordes redondeados */
+    box-sizing: border-box; /* Importante para el ancho correcto */
+    margin-top: 5px;
 }
 
 .btn {
+    /* Tu estilo original de botón es más general, lo mantengo. */
     margin-top: 20px; /* Espacio adicional para los botones */
+}
+
+/* ---------------------------------------------------------------- */
+/* ESTILOS DE COLUMNAS RESPONSIVAS (EXISTENTES) */
+/* ---------------------------------------------------------------- */
+
+/* Contenedor principal para organizar los campos del empleado (2 columnas) */
+.form-grid-empleado {
+    display: grid;
+    /* Por defecto, una sola columna para dispositivos móviles (responsive) */
+    grid-template-columns: 1fr; 
+    gap: 1.5rem 2rem; /* Espacio vertical y horizontal entre los campos */
+    margin-bottom: 2rem;
+}
+
+/* Estilos para el contenedor de los datos del usuario (3 columnas) */
+.form-grid-usuario {
+    display: grid;
+    grid-template-columns: 1fr; 
+    gap: 1.5rem 2rem; 
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #ddd;
+}
+
+/* ---------------------------------------------------------------- */
+/* ESTILOS DE COLUMNAS RESPONSIVAS PARA NÓMINA (NUEVOS) */
+/* ---------------------------------------------------------------- */
+
+/* Contenedor para 3 columnas (usado en Totales) */
+.form-grid-3cols {
+    display: grid;
+    grid-template-columns: 1fr; /* Móvil: 1 columna */
+    gap: 1.5rem 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Contenedor para 4 columnas (usado en Bonificaciones y Descuentos) */
+.form-grid-4cols {
+    display: grid;
+    grid-template-columns: 1fr; /* Móvil: 1 columna */
+    gap: 1.5rem 2rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+    /* Empleado (existente) */
+    .form-grid-empleado {
+        grid-template-columns: repeat(2, 1fr); 
+    }
+    .form-grid-empleado .form-group.full-width {
+        grid-column: 1 / -1; 
+    }
+
+    /* Usuario (existente) */
+    .form-grid-usuario {
+        grid-template-columns: repeat(3, 1fr); 
+    }
+
+    /* Nómina (nuevas) */
+    .form-grid-3cols {
+        grid-template-columns: repeat(3, 1fr); /* Desktop: 3 columnas */
+    }
+
+    .form-grid-4cols {
+        grid-template-columns: repeat(4, 1fr); /* Desktop: 4 columnas */
+    }
+}
+
+/* Estilos para el área de botones (alineados a la derecha, simplificado) */
+.form-actions {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #ddd;
+    text-align: right; 
+    display: flex;
+    justify-content: flex-end; /* Alinea los botones a la derecha por defecto */
+    gap: 10px;
+}
+
+/* Asegura que el botón de calcular quede a la izquierda en desktop */
+.form-actions-left {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.text-danger {
+    color: #dc3545;
+    font-size: 0.875em;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+.text-muted {
+    color: #6c757d;
+    font-size: 0.9em;
+    margin-bottom: 1rem;
 }

@@ -3,59 +3,103 @@
 @section('title', 'Editar Empleado y Usuario - Mi App')
 
 @section('content')
-    <h1 class="welcome-message">Editar Empleado y Usuario</h1>
+<h1 class="welcome-message">Editar Empleado y Usuario</h1>
 
-    <div class="card">
-        <form id="edit-employee-user-form" action="{{ route('empleados.update', $empleado->id) }}" method="POST">
-            @csrf
-            @method('PUT')
+<div class="card">
+    <form id="edit-employee-user-form" action="{{ route('empleados.update', $empleado->id) }}" method="POST">
+        @csrf
+        @method('PUT')
+        
+        <!-- CONTENEDOR DE ERRORES GENERALES -->
+        @if ($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <p><strong>Por favor, corrija los siguientes errores:</strong></p>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <!-- SECCIÓN: Datos del Empleado -->
+        <h2>Datos del Empleado</h2>
+        
+        <div class="form-grid-empleado">
             
-            <!-- Formulario de Empleado (visible para ambos roles) -->
-            <h2>Datos del Empleado</h2>
+            {{-- Fila 1: Nombres y Primer Apellido --}}
             <div class="form-group">
                 <label for="nombres">Nombres</label>
-                <input type="text" name="nombres" id="nombres" class="form-control" value="{{ old('nombres', $empleado->nombres) }}" required>
+                {{-- @error('nombres') añade la clase 'is-invalid' si hay error --}}
+                <input type="text" name="nombres" id="nombres" class="form-control @error('nombres') is-invalid @enderror" value="{{ old('nombres', $empleado->nombres) }}" required>
+                @error('nombres')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
             <div class="form-group">
                 <label for="primerapellido">Primer Apellido</label>
-                <input type="text" name="primerapellido" id="primerapellido" class="form-control" value="{{ old('primerapellido', $empleado->primerapellido) }}" required>
+                <input type="text" name="primerapellido" id="primerapellido" class="form-control @error('primerapellido') is-invalid @enderror" value="{{ old('primerapellido', $empleado->primerapellido) }}" required>
+                @error('primerapellido')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
+            
+            {{-- Fila 2: Segundo Apellido y Sucursal --}}
             <div class="form-group">
                 <label for="segundoapellido">Segundo Apellido</label>
-                <input type="text" name="segundoapellido" id="segundoapellido" class="form-control" value="{{ old('segundoapellido', $empleado->segundoapellido) }}">
+                <input type="text" name="segundoapellido" id="segundoapellido" class="form-control @error('segundoapellido') is-invalid @enderror" value="{{ old('segundoapellido', $empleado->segundoapellido) }}">
+                @error('segundoapellido')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
             <div class="form-group">
                 <label for="sucursal">Sucursal</label>
-                <select name="sucursal" id="sucursal" class="form-control" required>
+                <select name="sucursal" id="sucursal" class="form-control @error('sucursal') is-invalid @enderror" required>
                     <option value="0" {{ old('sucursal', $empleado->sucursal) == 0 ? 'selected' : '' }}>Central</option>
                     <option value="1" {{ old('sucursal', $empleado->sucursal) == 1 ? 'selected' : '' }}>Sucursal</option>
                 </select>
+                @error('sucursal')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
+
+            {{-- Fila 3: Fecha Ingreso y Caja de Salud --}}
             <div class="form-group">
                 <label for="fecha_ingreso">Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" id="fecha_ingreso" class="form-control" value="{{ old('fecha_ingreso', $empleado->fecha_ingreso) }}" required>
+                <input type="date" name="fecha_ingreso" id="fecha_ingreso" class="form-control @error('fecha_ingreso') is-invalid @enderror" value="{{ old('fecha_ingreso', $empleado->fecha_ingreso) }}" required>
+                @error('fecha_ingreso')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
             <div class="form-group">
                 <label for="caja_de_salud">Caja de Salud</label>
-                <select name="caja_de_salud" id="caja_de_salud" class="form-control">
+                <select name="caja_de_salud" id="caja_de_salud" class="form-control @error('caja_de_salud') is-invalid @enderror">
                     <option value="">Seleccione...</option>
                     <option value="Caja Nacional de Salud" {{ old('caja_de_salud', $empleado->caja_de_salud) == 'Caja Nacional de Salud' ? 'selected' : '' }}>Caja Nacional de Salud</option>
                     <option value="Caja Bancaria Estatal de Salud" {{ old('caja_de_salud', $empleado->caja_de_salud) == 'Caja Bancaria Estatal de Salud' ? 'selected' : '' }}>Caja Bancaria Estatal de Salud</option>
                     <option value="Caja de Salud de la Banca Privada" {{ old('caja_de_salud', $empleado->caja_de_salud) == 'Caja de Salud de la Banca Privada' ? 'selected' : '' }}>Caja de Salud de la Banca Privada</option>
                     <option value="Caja Petrolera de Salud" {{ old('caja_de_salud', $empleado->caja_de_salud) == 'Caja Petrolera de Salud' ? 'selected' : '' }}>Caja Petrolera de Salud</option>
                 </select>
+                @error('caja_de_salud')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
+
+            {{-- Fila 4: Tipo Contrato y Modalidad Contrato --}}
             <div class="form-group">
                 <label for="tipo_de_contrato">Tipo de Contrato</label>
-                <select name="tipo_de_contrato" id="tipo_de_contrato" class="form-control">
+                <select name="tipo_de_contrato" id="tipo_de_contrato" class="form-control @error('tipo_de_contrato') is-invalid @enderror">
                     <option value="">Seleccione...</option>
                     <option value="Contrato escrito" {{ old('tipo_de_contrato', $empleado->tipo_de_contrato) == 'Contrato escrito' ? 'selected' : '' }}>Contrato escrito</option>
                     <option value="Contrato verbal" {{ old('tipo_de_contrato', $empleado->tipo_de_contrato) == 'Contrato verbal' ? 'selected' : '' }}>Contrato verbal</option>
                 </select>
+                @error('tipo_de_contrato')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
             <div class="form-group">
                 <label for="modalidad_contrato">Modalidad de Contrato</label>
-                <select name="modalidad_contrato" id="modalidad_contrato" class="form-control">
+                <select name="modalidad_contrato" id="modalidad_contrato" class="form-control @error('modalidad_contrato') is-invalid @enderror">
                     <option value="">Seleccione...</option>
                     <option value="Contrato por tiempo indefinido" {{ old('modalidad_contrato', $empleado->modalidad_contrato) == 'Contrato por tiempo indefinido' ? 'selected' : '' }}>Contrato por tiempo indefinido</option>
                     <option value="Contrato a plazo fijo" {{ old('modalidad_contrato', $empleado->modalidad_contrato) == 'Contrato a plazo fijo' ? 'selected' : '' }}>Contrato a plazo fijo</option>
@@ -63,26 +107,42 @@
                     <option value="Contrato por obra o servicio" {{ old('modalidad_contrato', $empleado->modalidad_contrato) == 'Contrato por obra o servicio' ? 'selected' : '' }}>Contrato por obra o servicio</option>
                     <option value="Contrato de teletrabajo" {{ old('modalidad_contrato', $empleado->modalidad_contrato) == 'Contrato de teletrabajo' ? 'selected' : '' }}>Contrato de teletrabajo</option>
                 </select>
+                @error('modalidad_contrato')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
+
+            {{-- Fila 5: Cargo Laboral y Fecha Nacimiento --}}
             <div class="form-group">
                 <label for="cargo_laboral">Cargo Laboral</label>
-                <input type="text" name="cargo_laboral" id="cargo_laboral" class="form-control" value="{{ old('cargo_laboral', $empleado->cargo_laboral) }}">
+                <input type="text" name="cargo_laboral" id="cargo_laboral" class="form-control @error('cargo_laboral') is-invalid @enderror" value="{{ old('cargo_laboral', $empleado->cargo_laboral) }}">
+                @error('cargo_laboral')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
             <div class="form-group">
                 <label for="fecha_de_nacimiento">Fecha de Nacimiento</label>
-                <input type="date" name="fecha_de_nacimiento" id="fecha_de_nacimiento" class="form-control" value="{{ old('fecha_de_nacimiento', $empleado->fecha_de_nacimiento) }}" required>
+                <input type="date" name="fecha_de_nacimiento" id="fecha_de_nacimiento" class="form-control @error('fecha_de_nacimiento') is-invalid @enderror" value="{{ old('fecha_de_nacimiento', $empleado->fecha_de_nacimiento) }}" required>
+                @error('fecha_de_nacimiento')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
+
+            {{-- Fila 6: Género y Estado Civil --}}
             <div class="form-group">
                 <label for="genero">Género</label>
-                <select name="genero" id="genero" class="form-control">
+                <select name="genero" id="genero" class="form-control @error('genero') is-invalid @enderror">
                     <option value="">Seleccione...</option>
                     <option value="M" {{ old('genero', $empleado->genero) == 'M' ? 'selected' : '' }}>Masculino</option>
                     <option value="F" {{ old('genero', $empleado->genero) == 'F' ? 'selected' : '' }}>Femenino</option>
                 </select>
+                @error('genero')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
             <div class="form-group">
                 <label for="estado_civil">Estado Civil</label>
-                <select name="estado_civil" id="estado_civil" class="form-control">
+                <select name="estado_civil" id="estado_civil" class="form-control @error('estado_civil') is-invalid @enderror">
                     <option value="">Seleccione...</option>
                     <option value="Soltero" {{ old('estado_civil', $empleado->estado_civil) == 'Soltero' ? 'selected' : '' }}>Soltero</option>
                     <option value="Casado" {{ old('estado_civil', $empleado->estado_civil) == 'Casado' ? 'selected' : '' }}>Casado</option>
@@ -90,52 +150,95 @@
                     <option value="Viudo" {{ old('estado_civil', $empleado->estado_civil) == 'Viudo' ? 'selected' : '' }}>Viudo</option>
                     <option value="Unión libre" {{ old('estado_civil', $empleado->estado_civil) == 'Unión libre' ? 'selected' : '' }}>Unión libre</option>
                 </select>
- </div>
+                @error('estado_civil')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
+            </div>
+
+            {{-- Fila 7: Documento Identidad y Teléfono --}}
             <div class="form-group">
                 <label for="documento_identidad">Documento de Identidad</label>
-                <input type="text" name="documento_identidad" id="documento_identidad" class="form-control" value="{{ old('documento_identidad', $empleado->documento_identidad) }}" required>
+                {{-- ESTE CAMPO AHORA MUESTRA ERROR DE 'numeric' y 'unique' --}}
+                <input type="text" name="documento_identidad" id="documento_identidad" class="form-control @error('documento_identidad') is-invalid @enderror" value="{{ old('documento_identidad', $empleado->documento_identidad) }}" required>
+                @error('documento_identidad')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
             <div class="form-group">
                 <label for="telefono">Teléfono</label>
-                <input type="text" name="telefono" id="telefono" class="form-control" value="{{ old('telefono', $empleado->telefono) }}">
+                <input type="text" name="telefono" id="telefono" class="form-control @error('telefono') is-invalid @enderror" value="{{ old('telefono', $empleado->telefono) }}">
+                @error('telefono')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
-            <div class="form-group">
+            
+            {{-- Fila 8: Dirección (Ocupa todo el ancho) --}}
+            <div class="form-group full-width">
                 <label for="direccion">Dirección</label>
-                <input type="text" name="direccion" id="direccion" class="form-control" value="{{ old('direccion', $empleado->direccion) }}">
+                <input type="text" name="direccion" id="direccion" class="form-control @error('direccion') is-invalid @enderror" value="{{ old('direccion', $empleado->direccion) }}">
+                @error('direccion')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
+            
+            {{-- Fila 9: Email, Foto y Estado --}}
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $empleado->email) }}">
+                {{-- ESTE CAMPO AHORA MUESTRA ERROR DE 'email' y 'unique' --}}
+                <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $empleado->email) }}">
+                @error('email')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
             <div class="form-group">
                 <label for="foto">Foto</label>
-                <input type="text" name="foto" id="foto" class="form-control" value="{{ old('foto', $empleado->foto) }}">
+                <input type="text" name="foto" id="foto" class="form-control @error('foto') is-invalid @enderror" value="{{ old('foto', $empleado->foto) }}">
+                @error('foto')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
             <div class="form-group">
                 <label for="estado">Estado</label>
-                <select name="estado" id="estado" class="form-control">
+                <select name="estado" id="estado" class="form-control @error('estado') is-invalid @enderror">
                     <option value="1" {{ old('estado', $empleado->estado) == 1 ? 'selected' : '' }}>Activo</option>
                     <option value="0" {{ old('estado', $empleado->estado) == 0 ? 'selected' : '' }}>Inactivo</option>
                 </select>
+                @error('estado')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
 
-            <!-- Formulario de Usuario - Diferentes casos -->
-            @if($usuario)
-                <!-- Caso 1: Usuario normal editándose a sí mismo -->
-                @if(Auth::user()->role === 'user' && Auth::user()->id == $usuario->id)
-                    <h2>Mis Datos de Usuario</h2>
+        </div> <!-- Fin .form-grid-empleado -->
+
+
+        <!-- SECCIÓN: Datos del Usuario (Condicional) -->
+        @if($usuario)
+            
+            <!-- Caso 1: Usuario normal editándose a sí mismo -->
+            @if(Auth::user()->role === 'user' && Auth::user()->id == $usuario->id)
+                <h2>Mis Datos de Usuario</h2>
+                <div class="form-grid-usuario">
                     <div class="form-group">
                         <label for="username">Username</label>
-                        <input type="text" name="username" id="username" class="form-control" value="{{ old('username', $usuario->username) }}" readonly style="background-color: #e9ecef;">
+                        <input type="text" name="username" id="username" class="form-control @error('username') is-invalid @enderror" value="{{ old('username', $usuario->username) }}" readonly style="background-color: #e9ecef;">
                         <small class="text-muted">No puedes cambiar tu username</small>
+                        @error('username')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña (dejar en blanco para no cambiar)</label>
-                        <input type="password" name="password" id="password" class="form-control">
+                        <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror">
+                        @error('password')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="password_confirmation">Confirmar Contraseña</label>
-                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror">
+                        @error('password_confirmation')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="role">Rol</label>
@@ -143,54 +246,89 @@
                         <input type="hidden" name="role" value="{{ $usuario->role }}">
                         <small class="text-muted">No puedes cambiar tu rol</small>
                     </div>
+                </div>
 
-                <!-- Caso 2: Admin editando cualquier usuario -->
-                @elseif(Auth::user()->role === 'admin')
-                    <h2>Datos del Usuario</h2>
+            <!-- Caso 2: Admin editando cualquier usuario -->
+            @elseif(Auth::user()->role === 'admin')
+                <h2>Datos del Usuario</h2>
+                <div class="form-grid-usuario">
                     <div class="form-group">
                         <label for="username">Username</label>
-                        <input type="text" name="username" id="username" class="form-control" value="{{ old('username', $usuario->username) }}" required>
+                        <input type="text" name="username" id="username" class="form-control @error('username') is-invalid @enderror" value="{{ old('username', $usuario->username) }}" required>
+                        @error('username')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña (dejar en blanco para no cambiar)</label>
-                        <input type="password" name="password" id="password" class="form-control">
+                        <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror">
+                        @error('password')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="password_confirmation">Confirmar Contraseña</label>
-                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror">
+                        @error('password_confirmation')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="role">Rol</label>
-                        <select name="role" id="role" class="form-control" required>
+                        <select name="role" id="role" class="form-control @error('role') is-invalid @enderror" required>
                             <option value="admin" {{ old('role', $usuario->role) == 'admin' ? 'selected' : '' }}>Admin</option>
                             <option value="user" {{ old('role', $usuario->role) == 'user' ? 'selected' : '' }}>User</option>
                         </select>
+                        @error('role')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
                     </div>
+                </div>
 
-                <!-- Caso 3: Usuario normal viendo otro usuario (ocultar datos) -->
-                @else
-                    <!-- Campos ocultos para mantener los valores actuales -->
-                    <input type="hidden" name="username" value="{{ $usuario->username }}">
-                    <input type="hidden" name="role" value="{{ $usuario->role }}">
-                @endif
+            <!-- Caso 3: Usuario normal viendo otro usuario (ocultar datos) -->
+            @else
+                <!-- Campos ocultos para mantener los valores actuales -->
+                <input type="hidden" name="username" value="{{ $usuario->username }}">
+                <input type="hidden" name="role" value="{{ $usuario->role }}">
             @endif
+        @endif
 
-            <div class="form-group">
-                <button type="button" class="btn btn-primary" onclick="confirmUpdate()">
-                    <i class="fas fa-save"></i> Actualizar
-                </button>
-                <a href="{{ route('empleados.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Cancelar
-                </a>
-            </div>
-        </form>
+        <!-- SECCIÓN: Botones de Acción -->
+        <div class="form-actions">
+            <a href="{{ route('empleados.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+            {{-- Botón ahora muestra el modal de confirmación --}}
+            <button type="button" class="btn btn-primary" onclick="showCustomConfirm()">
+                <i class="fas fa-save"></i> Actualizar
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de Confirmación Personalizado (REEMPLAZO DE confirm()) -->
+<div id="custom-confirm-modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+    <div style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 400px; border-radius: 8px;">
+        <p><strong>¿Estás seguro de actualizar el empleado y el usuario?</strong></p>
+        <button onclick="submitForm()" style="background-color: #942044; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Sí, Actualizar</button>
+        <button onclick="hideCustomConfirm()" style="background-color: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Cancelar</button>
     </div>
+</div>
 
-    <script>
-        function confirmUpdate() {
-            if (confirm('¿Estás seguro de actualizar el empleado y el usuario?')) {
-                document.getElementById('edit-employee-user-form').submit();
-            }
-        }
-    </script>
+<script>
+    function showCustomConfirm() {
+        document.getElementById('custom-confirm-modal').style.display = 'block';
+    }
+
+    function hideCustomConfirm() {
+        document.getElementById('custom-confirm-modal').style.display = 'none';
+    }
+    
+    function submitForm() {
+        document.getElementById('custom-confirm-modal').style.display = 'none';
+        document.getElementById('edit-employee-user-form').submit();
+    }
+</script>
+
+
 @endsection

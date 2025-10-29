@@ -115,8 +115,8 @@ class Nomina extends Model
     public function getNombreEmpleadoAttribute()
     {
         return $this->empleado ? 
-               $this->empleado->nombres . ' ' . $this->empleado->primerapellido . ' ' . $this->empleado->segundoapellido : 
-               'Empleado no encontrado';
+                 $this->empleado->nombres . ' ' . $this->empleado->primerapellido . ' ' . $this->empleado->segundoapellido : 
+                 'Empleado no encontrado';
     }
 
     /**

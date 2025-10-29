@@ -31,6 +31,50 @@ class Empleado extends Model
         'estado' => 'boolean', // Convierte 1/0 de TINYINT a true/false
     ];
 
+    // ====================================================================
+    // MUTATORS: Conversión a Mayúsculas antes de guardar
+    // IMPORTANTE: Se usa mb_strtoupper para manejar correctamente acentos y Ñ
+    // ====================================================================
+
+    public function setNombresAttribute($value)
+    {
+        $this->attributes['nombres'] = mb_strtoupper($value, 'UTF-8');
+    }
+
+    public function setPrimerApellidoAttribute($value)
+    {
+        $this->attributes['primerapellido'] = mb_strtoupper($value, 'UTF-8');
+    }
+
+    public function setSegundoApellidoAttribute($value)
+    {
+        $this->attributes['segundoapellido'] = mb_strtoupper($value, 'UTF-8');
+    }
+
+    public function setSucursalAttribute($value)
+    {
+        $this->attributes['sucursal'] = mb_strtoupper($value, 'UTF-8');
+    }
+    
+    public function setCargoLaboralAttribute($value)
+    {
+        $this->attributes['cargo_laboral'] = mb_strtoupper($value, 'UTF-8');
+    }
+
+    public function setDocumentoIdentidadAttribute($value)
+    {
+        $this->attributes['documento_identidad'] = mb_strtoupper($value, 'UTF-8');
+    }
+    
+    public function setDireccionAttribute($value)
+    {
+        $this->attributes['direccion'] = mb_strtoupper($value, 'UTF-8');
+    }
+
+    // ====================================================================
+    // RELACIONES Y MÉTODOS EXISTENTES
+    // ====================================================================
+
     // Relación con el modelo Usuario
     public function usuario()
     {

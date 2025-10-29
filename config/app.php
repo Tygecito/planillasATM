@@ -82,7 +82,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => 'es', // CAMBIADO a español
 
     /*
     |--------------------------------------------------------------------------
@@ -93,9 +93,10 @@ return [
     | is not available. You may change the value to correspond to any of
     | the language folders that are provided through your application.
     |
+    |
     */
 
-    'fallback_locale' => 'en',
+    'fallback_locale' => 'es', // CAMBIADO a español
 
     /*
     |--------------------------------------------------------------------------
@@ -108,7 +109,7 @@ return [
     |
     */
 
-    'faker_locale' => 'en_US',
+    'faker_locale' => 'es_ES', // CAMBIADO a español de España (o el que prefieras)
 
     /*
     |--------------------------------------------------------------------------
@@ -140,7 +141,7 @@ return [
 
     'maintenance' => [
         'driver' => 'file',
-        // 'store'  => 'redis',
+        // 'store' 	=> 'redis',
     ],
 
     /*
