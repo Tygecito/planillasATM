@@ -187,9 +187,9 @@
     </div>
     
     <div class="form-group">
-        <label for="foto">Foto</label>
-        <input type="text" name="foto" id="foto" class="form-control @error('foto') is-invalid @enderror" value="{{ old('foto') }}" placeholder="URL de la foto">
-        @error('foto')
+        <label for="cua">CUA (Código Único de Aportante)</label>
+        <input type="number" name="cua" id="cua" class="form-control @error('cua') is-invalid @enderror" value="{{ old('cua') }}" placeholder="Solo números (8-10 dígitos)" min="10000000" max="9999999999">
+        @error('cua')
             <small class="text-danger">{{ $message }}</small>
         @enderror
     </div>

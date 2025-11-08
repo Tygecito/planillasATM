@@ -30,12 +30,17 @@ Route::middleware(['auth'])->group(function () {
 
     // Módulo de Nóminas
     Route::resource('nominas', NominaController::class);
-    Route::get('nominas/{id}/download', [NominaController::class, 'download'])->name('nominas.download'); // ← AÑADE ESTA LÍNEA
+    Route::get('nominas/{id}/download', [NominaController::class, 'download'])->name('nominas.download'); 
 
     // Módulo de Planillas
-    Route::resource('planillas', PlanillaController::class);
+    Route::resource('planillas', PlanillaController::class)->only(['index']); 
+    Route::get('planillas/generar/{tipo}/{formato}', [PlanillaController::class, 'generar'])->name('planillas.generar');
 
     // Módulo de Asistencia
+    // **Ruta POST para la importación del Excel**
+    Route::post('asistencias/importar', [AsistenciaController::class, 'import'])->name('asistencias.import');
+    
+    // **Ruta Resource para el resto de acciones (GET /asistencias llama a index)**
     Route::resource('asistencias', AsistenciaController::class);
 
     // Módulo de Permisos (sustituye a vacaciones)

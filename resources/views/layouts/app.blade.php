@@ -16,7 +16,7 @@
 </head>
 <body>
     <header class="header">
-        <div class="logo">Mi Aplicación</div>
+        <div class="logo">SISTEMA WEB PARA LA GESTIÓN DE PERSONAL Y NÓMINAS</div>
         <div class="user-info">
             @if (Auth::check())
                 @php
@@ -79,11 +79,13 @@
                     </a>
                 </li>
                 <!-- Agregar enlace a Usuarios -->
+ {{-- 
                 <li>
                     <a href="{{ route('usuarios.index') }}" class="{{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
                         <i class="fas fa-users-cog"></i> Usuarios
                     </a>
                 </li>
+                --}}
             </ul>
         </aside>
         
