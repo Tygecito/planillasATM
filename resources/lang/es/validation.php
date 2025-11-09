@@ -2,16 +2,7 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Validation Language Lines
-    |--------------------------------------------------------------------------
-    |
-    | The following language lines contain the default error messages used by
-    | the validator class. Some of these rules have multiple versions such
-    | as the size rules. Feel free to tweak each of these messages here.
-    |
-    */
+    // ... (Todas las reglas estándar de 'accepted' a 'uuid') ...
 
     'accepted' => 'El campo :attribute debe ser aceptado.',
     'active_url' => 'El campo :attribute no es una URL válida.',
@@ -119,11 +110,6 @@ return [
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
     |--------------------------------------------------------------------------
-    |
-    | Here you may specify custom validation messages for attributes using the
-    | convention "attribute.rule" to name the lines. This makes it quick to
-    | specify a specific custom language line for a given attribute rule.
-    |
     */
 
     'custom' => [
@@ -133,17 +119,31 @@ return [
         'password' => [
             'min' => 'La contraseña debe tener al menos :min caracteres.',
         ],
+        'nit_dependiente' => [
+            'numeric' => 'El NIT dependiente debe ser solo numérico.',
+            'unique'  => 'El NIT dependiente ya ha sido registrado.',
+        ],
+        'complemento' => [
+            'max'   => 'El complemento no debe tener más de :max caracteres.',
+            'regex' => 'El formato del complemento no es válido (ej: 1A, E5).',
+        ],
+        'fecha_de_nacimiento' => [
+            'after_or_equal' => 'La fecha de nacimiento no es válida (el empleado debe tener como máximo 70 años).',
+            'before_or_equal' => 'La fecha de nacimiento no es válida (el empleado debe tener al menos 20 años).',
+        ],
+        
+        // --- SECCIÓN ACTUALIZADA ---
+        'fecha_ingreso' => [
+            'before_or_equal' => 'La fecha de ingreso no puede ser una fecha futura.',
+            'after_or_equal' => 'La fecha de ingreso es demasiado antigua (no más de 50 años).',
+        ],
+        // --- ---
     ],
 
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Attributes
     |--------------------------------------------------------------------------
-    |
-    | The following language lines are used to swap our attribute placeholder
-    | with something more readable such as "E-Mail Address" instead
-    | of "email". This simply helps us make messages more expressive.
-    |
     */
 
     'attributes' => [
@@ -164,6 +164,9 @@ return [
         'username' => 'username',
         'password' => 'contraseña',
         'role' => 'rol',
+        'cua' => 'CUA',
+        'complemento' => 'complemento',
+        'nit_dependiente' => 'NIT dependiente',
     ],
 
 ];

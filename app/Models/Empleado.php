@@ -10,11 +10,28 @@ class Empleado extends Model
 {
     use HasFactory;
 
+    // --- ¡NUEVO! ---
+    // Definimos la lista de cargos aquí, basada en tu ENUM.
+    public const CARGOS_LABORALES = [
+        'ENCARGADO ALMACENES',
+        'GERENTE GRAL',
+        'VENTAS',
+        'GERENTE FINANCIERO',
+        'CAJERO(A)',
+        'MENSAJERO/CHOFER',
+        'AUXILIAR ALMACENES',
+        'CONTABILIDAD',
+        'REGENTE FARMACEUTICO'
+    ];
+    // --- ---
+
     protected $fillable = [
         'nombres', 'primerapellido', 'segundoapellido', 'sucursal', 
         'fecha_ingreso', 'caja_de_salud', 'tipo_de_contrato', 'modalidad_contrato', 
         'cargo_laboral', 'fecha_de_nacimiento', 'genero', 'estado_civil', 
-        'documento_identidad', 'telefono', 'direccion', 'email', 'cua', 'estado', // CAMBIO: foto por cua
+        'documento_identidad', 
+        'complemento', 'nit_dependiente', 
+        'telefono', 'direccion', 'email', 'cua', 'estado', 
         'fecha_creacion', 'fecha_modificacion'
     ];
 
@@ -23,6 +40,8 @@ class Empleado extends Model
     protected $casts = [
         'estado' => 'boolean',
     ];
+
+    // ... (El resto de tus mutators 'setNombresAttribute', etc. no cambian) ...
 
     public function setNombresAttribute($value)
     {
@@ -54,15 +73,24 @@ class Empleado extends Model
         $this->attributes['documento_identidad'] = mb_strtoupper($value, 'UTF-8');
     }
     
+    public function setComplementoAttribute($value)
+    {
+        $this->attributes['complemento'] = $value ? mb_strtoupper($value, 'UTF-8') : null;
+    }
+
     public function setDireccionAttribute($value)
     {
         $this->attributes['direccion'] = mb_strtoupper($value, 'UTF-8');
     }
 
-    // CAMBIO: Mutator para CUA
     public function setCuaAttribute($value)
     {
         $this->attributes['cua'] = $value ? (string) $value : null;
+    }
+
+    public function setNitDependienteAttribute($value)
+    {
+        $this->attributes['nit_dependiente'] = $value ? (int) $value : null;
     }
 
     public function usuario()

@@ -29,25 +29,19 @@
     <div class="form-group">
         <label for="nombres">Nombres *</label>
         <input type="text" name="nombres" id="nombres" class="form-control @error('nombres') is-invalid @enderror" value="{{ old('nombres') }}" required>
-        @error('nombres')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('nombres') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
         <label for="primerapellido">Primer Apellido *</label>
         <input type="text" name="primerapellido" id="primerapellido" class="form-control @error('primerapellido') is-invalid @enderror" value="{{ old('primerapellido') }}" required>
-        @error('primerapellido')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('primerapellido') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
         <label for="segundoapellido">Segundo Apellido</label>
         <input type="text" name="segundoapellido" id="segundoapellido" class="form-control @error('segundoapellido') is-invalid @enderror" value="{{ old('segundoapellido') }}">
-        @error('segundoapellido')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('segundoapellido') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
@@ -57,17 +51,13 @@
             <option value="0" {{ old('sucursal') == '0' ? 'selected' : '' }}>Central</option>
             <option value="1" {{ old('sucursal') == '1' ? 'selected' : '' }}>Sucursal</option>
         </select>
-        @error('sucursal')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('sucursal') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
         <label for="fecha_ingreso">Fecha de Ingreso *</label>
         <input type="date" name="fecha_ingreso" id="fecha_ingreso" class="form-control @error('fecha_ingreso') is-invalid @enderror" value="{{ old('fecha_ingreso') }}" required>
-        @error('fecha_ingreso')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('fecha_ingreso') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
@@ -79,9 +69,7 @@
             <option value="Caja de Salud de la Banca Privada" {{ old('caja_de_salud') == 'Caja de Salud de la Banca Privada' ? 'selected' : '' }}>Caja de Salud de la Banca Privada</option>
             <option value="Caja Petrolera de Salud" {{ old('caja_de_salud') == 'Caja Petrolera de Salud' ? 'selected' : '' }}>Caja Petrolera de Salud</option>
         </select>
-        @error('caja_de_salud')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('caja_de_salud') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
@@ -91,9 +79,7 @@
             <option value="Contrato escrito" {{ old('tipo_de_contrato') == 'Contrato escrito' ? 'selected' : '' }}>Contrato escrito</option>
             <option value="Contrato verbal" {{ old('tipo_de_contrato') == 'Contrato verbal' ? 'selected' : '' }}>Contrato verbal</option>
         </select>
-        @error('tipo_de_contrato')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('tipo_de_contrato') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
@@ -106,25 +92,27 @@
             <option value="Contrato por obra o servicio" {{ old('modalidad_contrato') == 'Contrato por obra o servicio' ? 'selected' : '' }}>Contrato por obra o servicio</option>
             <option value="Contrato de teletrabajo" {{ old('modalidad_contrato') == 'Contrato de teletrabajo' ? 'selected' : '' }}>Contrato de teletrabajo</option>
         </select>
-        @error('modalidad_contrato')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('modalidad_contrato') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
-    
+
+
     <div class="form-group">
         <label for="cargo_laboral">Cargo Laboral *</label>
-        <input type="text" name="cargo_laboral" id="cargo_laboral" class="form-control @error('cargo_laboral') is-invalid @enderror" value="{{ old('cargo_laboral') }}" required>
+        <select name="cargo_laboral" id="cargo_laboral" class="form-control @error('cargo_laboral') is-invalid @enderror" required>
+            <option value="">Seleccione...</option>
+            {{-- Leemos la constante CARGOS_LABORALES directamente del Modelo --}}
+            @foreach(\App\Models\Empleado::CARGOS_LABORALES as $cargo)
+                <option value="{{ $cargo }}" {{ old('cargo_laboral') == $cargo ? 'selected' : '' }}>{{ $cargo }}</option>
+            @endforeach
+        </select>
         @error('cargo_laboral')
             <small class="text-danger">{{ $message }}</small>
         @enderror
     </div>
-    
     <div class="form-group">
         <label for="fecha_de_nacimiento">Fecha de Nacimiento *</label>
         <input type="date" name="fecha_de_nacimiento" id="fecha_de_nacimiento" class="form-control @error('fecha_de_nacimiento') is-invalid @enderror" value="{{ old('fecha_de_nacimiento') }}" required>
-        @error('fecha_de_nacimiento')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('fecha_de_nacimiento') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
@@ -134,9 +122,7 @@
             <option value="M" {{ old('genero') == 'M' ? 'selected' : '' }}>Masculino</option>
             <option value="F" {{ old('genero') == 'F' ? 'selected' : '' }}>Femenino</option>
         </select>
-        @error('genero')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('genero') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
@@ -149,49 +135,49 @@
             <option value="Viudo" {{ old('estado_civil') == 'Viudo' ? 'selected' : '' }}>Viudo</option>
             <option value="Unión libre" {{ old('estado_civil') == 'Unión libre' ? 'selected' : '' }}>Unión libre</option>
         </select>
-        @error('estado_civil')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('estado_civil') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
         <label for="documento_identidad">Documento de Identidad *</label>
-        <input type="text" name="documento_identidad" id="documento_identidad" class="form-control @error('documento_identidad') is-invalid @enderror" value="{{ old('documento_identidad') }}" required>
-        @error('documento_identidad')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        <input type="text" name="documento_identidad" id="documento_identidad" class="form-control @error('documento_identidad') is-invalid @enderror" value="{{ old('documento_identidad') }}" required inputmode="numeric">
+        @error('documento_identidad') <small class="text-danger">{{ $message }}</small> @enderror
+    </div>
+
+    <div class="form-group">
+        <label for="complemento">Complemento</label>
+        <input type="text" name="complemento" id="complemento" class="form-control @error('complemento') is-invalid @enderror" value="{{ old('complemento') }}" maxlength="2" placeholder="Ej: 1A, E5">
+        @error('complemento') <small class="text-danger">{{ $message }}</small> @enderror
+    </div>
+
+    <div class="form-group">
+        <label for="nit_dependiente">NIT Dependiente</label>
+        <input type="text" name="nit_dependiente" id="nit_dependiente" class="form-control @error('nit_dependiente') is-invalid @enderror" value="{{ old('nit_dependiente') }}" placeholder="Solo números" inputmode="numeric">
+        @error('nit_dependiente') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
         <label for="telefono">Teléfono</label>
-        <input type="text" name="telefono" id="telefono" class="form-control @error('telefono') is-invalid @enderror" value="{{ old('telefono') }}">
-        @error('telefono')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        <input type="text" name="telefono" id="telefono" class="form-control @error('telefono') is-invalid @enderror" value="{{ old('telefono') }}" inputmode="numeric">
+        @error('telefono') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group full-width">
         <label for="direccion">Dirección</label>
         <input type="text" name="direccion" id="direccion" class="form-control @error('direccion') is-invalid @enderror" value="{{ old('direccion') }}">
-        @error('direccion')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('direccion') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
         <label for="email">Email</label>
         <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}">
-        @error('email')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('email') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
         <label for="cua">CUA (Código Único de Aportante)</label>
         <input type="number" name="cua" id="cua" class="form-control @error('cua') is-invalid @enderror" value="{{ old('cua') }}" placeholder="Solo números (8-10 dígitos)" min="10000000" max="9999999999">
-        @error('cua')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('cua') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="form-group">
@@ -200,9 +186,7 @@
             <option value="1" {{ old('estado', 1) == 1 ? 'selected' : '' }}>Activo</option>
             <option value="0" {{ old('estado') == 0 ? 'selected' : '' }}>Inactivo</option>
         </select>
-        @error('estado')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
+        @error('estado') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
 </div> 
@@ -215,25 +199,19 @@
         <div class="form-group">
             <label for="username">Username</label>
             <input type="text" name="username" id="username" class="form-control @error('username') is-invalid @enderror" value="{{ old('username') }}">
-            @error('username')
-                <small class="text-danger">{{ $message }}</small>
-            @enderror
+            @error('username') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
         
         <div class="form-group">
             <label for="password">Contraseña</label>
             <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror">
-            @error('password')
-                <small class="text-danger">{{ $message }}</small>
-            @enderror
+            @error('password') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
         
         <div class="form-group">
             <label for="password_confirmation">Confirmar Contraseña</label>
             <input type="password" name="password_confirmation" id="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror">
-            @error('password_confirmation')
-                <small class="text-danger">{{ $message }}</small>
-            @enderror
+            @error('password_confirmation') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
         
         <div class="form-group">
@@ -243,9 +221,7 @@
                 <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                 <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>User</option>
             </select>
-            @error('role')
-                <small class="text-danger">{{ $message }}</small>
-            @enderror
+            @error('role') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
     </div>
 @endif
@@ -264,8 +240,6 @@
 
 </div>
 
-<!-- Modal de Confirmación Personalizado (REEMPLAZO DE confirm()) -->
-
 <div id="custom-confirm-modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
 <div style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 400px; border-radius: 8px;">
 <p><strong>¿Estás seguro de crear el nuevo empleado?</strong></p>
@@ -274,89 +248,26 @@
 </div>
 </div>
 
-{{-- CSS INLINE para garantizar que los errores y el modal se posicionen correctamente --}}
-
+{{-- CSS INLINE --}}
 <style>
-/* Estilos generales de mensajes de error /
-.alert-danger {
-background-color: #f8d7da;
-color: #721c24;
-padding: 1rem;
-margin-bottom: 1.5rem;
-border: 1px solid #f5c6cb;
-border-radius: 4px;
-}
-.alert-danger ul {
-list-style: none;
-margin: 0;
-padding: 0;
-}
-.text-danger { / Usado por las etiquetas <small> para errores de campo */
-color: #dc3545 !important;
-font-size: 0.85rem;
-margin-top: 5px;
-display: block;
-}
-
-/* Estilos del Modal (CRUCIALES para que aparezca como popup) /
-#custom-confirm-modal > div {
-/ Sobrescribe los estilos inline para el contenido del modal si es necesario */
-text-align: center;
-}
-
-/* Estilos del layout del formulario (Repetidos para consistencia si no están en app.css) /
-.form-grid-empleado, .form-grid-usuario {
-display: grid;
-grid-template-columns: 1fr 1fr; / Dos columnas por defecto /
-gap: 1.5rem;
-margin-bottom: 1.5rem;
-}
-.form-actions {
-margin-top: 2rem;
-border-top: 1px solid #ddd;
-padding-top: 1.5rem;
-display: flex;
-justify-content: flex-end;
-gap: 10px;
-}
-@media (max-width: 768px) {
-.form-grid-empleado, .form-grid-usuario {
-grid-template-columns: 1fr; / Una columna en móvil */
-}
-.form-group.full-width {
-grid-column: 1 / -1;
-}
-}
-
+.alert-danger { background-color: #f8d7da; color: #721c24; padding: 1rem; margin-bottom: 1.5rem; border: 1px solid #f5c6cb; border-radius: 4px; }
+.alert-danger ul { list-style: none; margin: 0; padding: 0; }
+.text-danger { color: #dc3545 !important; font-size: 0.85rem; margin-top: 5px; display: block; }
+#custom-confirm-modal > div { text-align: center; }
+.form-grid-empleado, .form-grid-usuario { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+.form-actions { margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 1.5rem; display: flex; justify-content: flex-end; gap: 10px; }
+@media (max-width: 768px) { .form-grid-empleado, .form-grid-usuario { grid-template-columns: 1fr; } }
+.form-group.full-width { grid-column: 1 / -1; }
 </style>
 
 <script>
-// Muestra el modal de confirmación
-function showCustomConfirm() {
-document.getElementById('custom-confirm-modal').style.display = 'block';
-}
-
-// Oculta el modal de confirmación
-function hideCustomConfirm() {
-document.getElementById('custom-confirm-modal').style.display = 'none';
-}
-
-// Ejecuta el envío del formulario
-function submitForm() {
-// Oculta el modal antes de enviar
-hideCustomConfirm();
-// Envía el formulario de creación
-document.getElementById('create-employee-form').submit();
-}
-
-// Cierra el modal si el usuario hace clic fuera de él
+function showCustomConfirm() { document.getElementById('custom-confirm-modal').style.display = 'block'; }
+function hideCustomConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
+function submitForm() { hideCustomConfirm(); document.getElementById('create-employee-form').submit(); }
 window.onclick = function(event) {
 const modal = document.getElementById('custom-confirm-modal');
-if (event.target === modal) {
-modal.style.display = 'none';
+if (event.target === modal) { modal.style.display = 'none'; }
 }
-}
-
 </script>
 
 @endsection
