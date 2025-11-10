@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Permiso; 
+use App\Models\Permiso;
+use App\Models\Subsidio; // --- NUEVO --- Importar el modelo Subsidio
 
 class Empleado extends Model
 {
@@ -41,8 +42,7 @@ class Empleado extends Model
         'estado' => 'boolean',
     ];
 
-    // ... (El resto de tus mutators 'setNombresAttribute', etc. no cambian) ...
-
+    // ... (Mutators setNombresAttribute, etc. se quedan igual) ...
     public function setNombresAttribute($value)
     {
         $this->attributes['nombres'] = mb_strtoupper($value, 'UTF-8');
@@ -93,6 +93,7 @@ class Empleado extends Model
         $this->attributes['nit_dependiente'] = $value ? (int) $value : null;
     }
 
+
     public function usuario()
     {
         return $this->hasOne(Usuario::class, 'empleado_id');
@@ -102,6 +103,14 @@ class Empleado extends Model
     {
         return $this->hasMany(Permiso::class, 'empleado_id');
     }
+
+    // --- NUEVO ---
+    // Relación: Un empleado puede tener muchos subsidios.
+    public function subsidios()
+    {
+        return $this->hasMany(Subsidio::class, 'empleado_id');
+    }
+    // --- FIN NUEVO ---
 
     public function setCreatedAt($value)
     {
@@ -115,6 +124,7 @@ class Empleado extends Model
     
     public function getSaldoVacaciones(int $exceptPermisoId = null): float
     {
+        // ... (Tu lógica de getSaldoVacaciones se queda igual) ...
         $dias_base_anuales = 15.0;
 
         $query = $this->permisos()

@@ -186,7 +186,7 @@
                 $nov_edad = 0; // Asumido
             @endphp
 
-            @foreach ($datosPlanilla as $index => $nomina)
+            @foreach ($datosPlanilla as $nomina)
                 @php
                     $tg = $nomina->total_ganado;
                     $remuneracion_neta = $tg - ($nomina->aporte_laboral + $nomina->aporte_nacional_solidario); 
@@ -209,9 +209,9 @@
                 @endphp
                 
                 <tr>
-                    <td class="w-idx">{{ $index + 1 }}</td>
+                    <td class="w-idx">{{ $loop->iteration }}</td>
                     <td class="w-ci">{{ $nomina->mes . '-' . substr($nomina->anio, 2) }}</td>
-                    <td class="w-ci">{{ $nomina->empleado->documento_identidad }}</td>
+                    <td class="w-ci">{{ $nomina->anio }}</td> <td class="w-ci">{{ $nomina->empleado->documento_identidad }}</td>
                     <td class="w-names text-left">{{ $nomina->empleado->primerapellido }}</td>
                     <td class="w-names text-left">{{ $nomina->empleado->segundoapellido }}</td>
                     <td class="w-names text-left">{{ $nomina->empleado->nombres }}</td>
@@ -253,7 +253,7 @@
                 @endphp
             @endforeach
 
-            {{-- Fila de Sumas Totales --}}
+            {{-- Fila de Sumas Totales (tu colspan="10" ya era correcto) --}}
             <tr class="sumas-totales">
                 <td colspan="10" class="text-left" style="text-align: left; font-size: 6pt; padding-left: 5px;">**TOTALES**</td>
                 <td class="w-base text-right">{{ number_format($sumaBaseImponible, 2, ',', '.') }}</td>

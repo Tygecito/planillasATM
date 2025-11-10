@@ -61,35 +61,42 @@
         <h3 style="margin-top: 2rem;">Tipos de Planilla</h3>
         <div class="report-actions-grid">
             
-            {{-- Planilla Mensual --}}
+            {{-- --- CAMBIO AQUÍ: Planilla Mensual (CON 3 BOTONES) --- --}}
             <div class="report-card">
                 <h4>1. Planilla Mensual</h4>
                 <p>Reporte detallado de sueldos y salarios por periodo.</p>
-                <div class="action-buttons">
+                {{-- (He añadido un grid de 3 columnas para alinear los botones) --}}
+                <div class="action-buttons" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                     <button class="btn btn-primary" onclick="generarReporte('mensual', 'pdf')">
                         <i class="fas fa-file-pdf"></i> PDF
                     </button>
-                    <button class="btn btn-secondary" onclick="generarReporte('mensual', 'xlsx')">
+                    <button class="btn btn-success" onclick="generarReporte('mensual', 'xlsx')">
                         <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    <button class="btn btn-secondary" onclick="generarReporte('mensual', 'csv')">
+                        <i class="fas fa-file-csv"></i> CSV
                     </button>
                 </div>
             </div>
 
-            {{-- Planilla RC IVA --}}
+            {{-- --- CAMBIO AQUÍ: Planilla RC IVA (CON 3 BOTONES) --- --}}
             <div class="report-card">
                 <h4>2. Planilla RC IVA</h4>
                 <p>Declaración jurada de retenciones por RC IVA.</p>
-                <div class="action-buttons">
+                <div class="action-buttons" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                     <button class="btn btn-primary" onclick="generarReporte('rc_iva', 'pdf')">
                         <i class="fas fa-file-pdf"></i> PDF
                     </button>
-                    <button class="btn btn-secondary" onclick="generarReporte('rc_iva', 'xlsx')">
+                    <button class="btn btn-success" onclick="generarReporte('rc_iva', 'xlsx')">
                         <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    <button class="btn btn-secondary" onclick="generarReporte('rc_iva', 'csv')">
+                        <i class="fas fa-file-csv"></i> CSV
                     </button>
                 </div>
             </div>
             
-            {{-- Planilla Gestora --}}
+            {{-- Planilla Gestora (la dejamos como estaba) --}}
             <div class="report-card">
                 <h4>3. Planilla Gestora</h4>
                 <p>Declaración de aportes a la Gestora Pública.</p>
@@ -156,6 +163,7 @@
 }
 </style>
 
+{{-- --- CAMBIO AQUÍ: SCRIPT ACTUALIZADO --- --}}
 <script>
 function generarReporte(tipo, formato) {
     const mes = document.getElementById('mes').value;
@@ -168,6 +176,7 @@ function generarReporte(tipo, formato) {
     }
 
     // Construye la URL de descarga.
+    // Ya no cambiamos la extensión, el formato (pdf, xlsx, csv) es directo.
     const url = `/planillas/generar/${tipo}/${formato}?mes=${mes}&anio=${anio}`;
     
     window.location.href = url;

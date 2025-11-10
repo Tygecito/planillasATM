@@ -5,7 +5,7 @@
 @section('content')
     <h1 class="welcome-message">Gestión de Nóminas</h1>
     
-                @if(isset($nominaDetalle))
+            @if(isset($nominaDetalle))
 <div class="detalle-nomina-container">
     <div class="detalle-header">
         <h4>🧾 Detalle de Nómina #{{ $nominaDetalle->id }}</h4>
@@ -17,7 +17,6 @@
     </div>
 
     <div class="detalle-body">
-        <!-- 🧍 Datos del empleado -->
         <section class="detalle-section">
             <h5>🧍 Datos del Empleado</h5>
             <div class="detalle-grid">
@@ -27,7 +26,6 @@
             </div>
         </section>
 
-        <!-- 📅 Periodo -->
         <section class="detalle-section">
             <h5>📅 Periodo</h5>
             <div class="detalle-grid">
@@ -39,7 +37,32 @@
             </div>
         </section>
 
-        <!-- 💰 Ingresos y 📉 Descuentos -->
+        {{-- --- NUEVO --- Sección de Subsidios en el Detalle --}}
+        <section class="detalle-section">
+            <h5>🎁 Subsidios (Aprobados en este periodo)</h5>
+            @php
+                // --- CORREGIDO --- Comentario cambiado a formato PHP
+                $mesNumDetalle = \Carbon\Carbon::createFromLocaleFormat('F', 'es_ES', $nominaDetalle->mes)->month;
+                
+                $subsidiosDetalle = $nominaDetalle->empleado->subsidios->filter(function($s) use ($mesNumDetalle, $nominaDetalle) {
+                    $fechaSub = \Carbon\Carbon::parse($s->fecha_solicitud);
+                    return $s->estado == 'APROBADO' && 
+                           $fechaSub->year == $nominaDetalle->anio && 
+                           $fechaSub->month == $mesNumDetalle;
+                });
+            @endphp
+            <div class="detalle-grid">
+                @forelse($subsidiosDetalle as $sub)
+                    <div><strong>{{ $sub->tipo_subsidio }}:</strong><br>{{ number_format($sub->monto, 2) }}</div>
+                @empty
+                    <div><strong>Subsidios:</strong><br>0.00</div>
+                @endforelse
+                <div><strong>Total Subsidios:</strong><br>{{ number_format($subsidiosDetalle->sum('monto'), 2) }}</div>
+            </div>
+        </section>
+        {{-- --- FIN NUEVO --- --}}
+
+
         <div class="detalle-dual">
             <div class="detalle-card ingresos">
                 <h5>💰 Ingresos</h5>
@@ -112,6 +135,7 @@
                         <th>Bonificaciones</th>
                         <th>Descuentos</th>
                         <th>Neto</th>
+                        <th>Subsidios</th> {{-- Columna Subsidios --}}
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -126,23 +150,52 @@
                         <td> {{ number_format($nomina->bono_antiguedad + $nomina->trabajo_extraordinario + $nomina->pago_domingo + $nomina->otros_bonos, 2) }}</td>
                         <td> {{ number_format($nomina->total_descuentos, 2) }}</td>
                         <td> {{ number_format($nomina->liquido, 2) }}</td>
+                        
+                        {{-- Celda con el total de subsidios del periodo --}}
+                        <td>
+                            @php
+                                // --- CORREGIDO --- Comentario cambiado a formato PHP
+                                $mesNumero = \Carbon\Carbon::createFromLocaleFormat('F', 'es_ES', $nomina->mes)->month;
+
+                                $subsidiosDelPeriodo = $nomina->empleado->subsidios->filter(function($subsidio) use ($mesNumero, $nomina) {
+                                    $fechaSubsidio = \Carbon\Carbon::parse($subsidio->fecha_solicitud);
+                                    
+                                    return $subsidio->estado == 'APROBADO' && 
+                                           $fechaSubsidio->year == $nomina->anio && 
+                                           $fechaSubsidio->month == $mesNumero;
+                                });
+
+                                $totalSubsidios = $subsidiosDelPeriodo->sum('monto');
+                            @endphp
+                            
+                            {{ number_format($totalSubsidios, 2) }}
+                        </td>
+
                         <td>
                             <a href="{{ route('nominas.show', $nomina->id) }}" class="btn btn-secondary"><i class="fas fa-eye"></i></a>
                             <a href="{{ route('nominas.edit', $nomina->id) }}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
                             <a href="{{ route('nominas.download', $nomina->id) }}" class="btn btn-secondary"><i class="fas fa-download"></i></a>
+                            
+                            {{-- Botón para gestionar subsidios --}}
+                            <a href="{{ route('subsidios.reporte', $nomina->empleado_id) }}" 
+                               class="btn btn-info" 
+                               title="Gestionar Subsidios">
+                                <i class="fas fa-gift"></i>
+                            </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center">No se encontraron nóminas</td>
+                        {{-- Colspan actualizado a 10 --}}
+                        <td colspan="10" class="text-center">No se encontraron nóminas</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
             
             @if($nominas->count())
-            <!-- PAGINACIÓN PERSONALIZADA EN ESPAÑOL -->
             <div class="pagination-custom">
+                {{-- (Tu código de paginación se queda igual) --}}
                 <nav class="pagination-nav">
                     <ul class="pagination-list">
                         {{-- Botón Anterior --}}
@@ -165,7 +218,6 @@
                             $start = max($current - 2, 1);
                             $end = min($current + 2, $last);
                             
-                            // Asegurar que siempre mostremos 5 páginas si es posible
                             if ($end - $start < 4) {
                                 if ($start == 1) {
                                     $end = min($start + 4, $last);
@@ -175,7 +227,6 @@
                             }
                         @endphp
 
-                        {{-- Mostrar primera página si no está en el rango --}}
                         @if($start > 1)
                             <li class="pagination-item">
                                 <a href="{{ $nominas->url(1) }}" class="pagination-link">1</a>
@@ -187,7 +238,6 @@
                             @endif
                         @endif
 
-                        {{-- Rango de páginas --}}
                         @for ($i = $start; $i <= $end; $i++)
                             <li class="pagination-item {{ $i == $current ? 'active' : '' }}">
                                 @if($i == $current)
@@ -198,7 +248,6 @@
                             </li>
                         @endfor
 
-                        {{-- Mostrar última página si no está en el rango --}}
                         @if($end < $last)
                             @if($end < $last - 1)
                                 <li class="pagination-item disabled">

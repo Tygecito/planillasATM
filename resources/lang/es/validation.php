@@ -169,4 +169,23 @@ return [
         'nit_dependiente' => 'NIT dependiente',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Validation Attributes
+    |--------------------------------------------------------------------------
+    */
+
+    'attributes' => [
+        'nombres' => 'nombres',
+        'primerapellido' => 'primer apellido',
+        // ... (Todos tus atributos existentes) ...
+        'nit_dependiente' => 'NIT dependiente',
+
+        // --- CAMBIO: AÑADIR ESTAS LÍNEAS ---
+        'empleados.*.haber_basico' => 'Haber Básico',
+        'empleados.*.smn' => 'SMN',
+        'empleados.*.empleado_id' => 'Empleado',
+        // --- FIN DEL CAMBIO ---
+    ],
+
 ];

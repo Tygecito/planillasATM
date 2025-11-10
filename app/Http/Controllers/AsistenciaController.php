@@ -2,95 +2,136 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Asistencia;
 use Illuminate\Http\Request;
+use App\Models\Asistencia;
+use App\Models\Marcacion; 
+use App\Models\Retraso;   
+use App\Models\Empleado; 
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\MarcacionesImport; // La clase que hace la importación y el cálculo
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log; 
 
 class AsistenciaController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     * Muestra la vista principal para la carga y gestión de asistencia.
+     * Muestra la vista principal (index.blade.php) y pasa los retrasos recientes.
      */
     public function index()
     {
-        // **ESTO HACE QUE TU VISTA index.blade.php SE RENDERICE**
-        return view('asistencias.index');
+        $retrasos = Retraso::with('empleado') 
+                           ->orderBy('fecha', 'desc')
+                           ->take(20)
+                           ->get();
+                           
+        return view('asistencias.index', [
+            'retrasos' => $retrasos 
+        ]);
     }
 
     /**
-     * Procesa la carga del archivo Excel con marcaciones del biométrico.
-     * Esta función maneja la subida del archivo y la recepción del filtro de mes/año.
+     * Procesa la carga del archivo Excel y ejecuta el cálculo de retrasos.
      */
     public function import(Request $request)
     {
-        // 1. Validación de los campos del formulario
         $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // Archivo requerido, tipos permitidos y tamaño máximo (10MB)
+            'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
             'mes_a_procesar' => 'required|integer|min:1|max:12',
-            'anio_a_procesar' => 'required|integer|min:2020|max:' . (date('Y') + 1), // Limita el año para evitar errores
+            'anio_a_procesar' => 'required|integer|min:2020|max:' . (date('Y') + 1),
         ]);
 
-        // 2. Obtener los datos del filtro
         $archivo = $request->file('excel_file');
-        $mes = $request->input('mes_a_procesar');
-        $anio = $request->input('anio_a_procesar');
+        $mes = (int)$request->input('mes_a_procesar');
+        $anio = (int)$request->input('anio_a_procesar');
 
-        // 3. Lógica de procesamiento de Excel (Añadirás la lógica de la librería aquí, como Laravel-Excel)
-        // Por ejemplo, si usaras Maatwebsite/Laravel-Excel:
-        // Excel::import(new TuClaseDeImportacion($mes, $anio), $archivo);
+        $conteo = 0;
+        
+        try {
+            // Usamos una transacción para asegurar la integridad de los datos
+            DB::transaction(function () use ($mes, $anio, $archivo, &$conteo) {
+                
+                // Limpiamos marcaciones antiguas para este periodo (SOLUCIÓN DUPLICACIÓN)
+                Marcacion::whereMonth('fecha_hora', $mes)->whereYear('fecha_hora', $anio)->delete();
+                
+                // 1. Creamos la instancia de Import
+                $import = new MarcacionesImport($mes, $anio);
+                
+                // 2. Ejecutamos la importación (El cálculo se dispara automáticamente por AfterImport)
+                Excel::import($import, $archivo);
+                
+                // 3. Obtenemos el conteo que se calculó DENTRO de la clase
+                $conteo = $import->conteoRetrasos;
 
-        // 4. Mensaje de éxito y redirección
+            }); 
+            
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+             $failures = $e->failures();
+             $error = "Error en la fila " . $failures[0]->row() . ": " . $failures[0]->errors()[0];
+             Log::error('Error de validación en Import: ' . $error, $failures);
+             return redirect()->route('asistencias.index')->with('danger', 'Error en la importación: ' . $error);
+        
+        } catch (\Exception $e) {
+            Log::error('Error general en Import: ' . $e->getMessage());
+            return redirect()->route('asistencias.index')->with('danger', 'Error procesando el archivo: ' . $e->getMessage());
+        }
+
         return redirect()->route('asistencias.index')->with('success', 
-            "El archivo '{$archivo->getClientOriginalName()}' fue subido. 
-             Se procederá a procesar las marcaciones del **Mes {$mes} / Año {$anio}**."
+            "Archivo subido. Se procesaron las marcaciones del {$mes}/{$anio}. Se encontraron {$conteo} retrasos."
         );
     }
     
+    // --- Módulo de Reportes ---
+
     /**
-     * Show the form for creating a new resource. (No usado para esta funcionalidad)
+     * Muestra la vista con el formulario de filtro para el reporte.
+     * Corrige el error "Undefined variable $mes" inicializando a null.
      */
-    public function create()
+    public function showReporte()
     {
-        //
+        $meses = [1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'];
+        
+        $resultados = collect(); 
+        $mes = null; 
+        $anio = null; 
+
+        return view('asistencias.reporte', compact('resultados', 'mes', 'anio', 'meses'));
     }
 
     /**
-     * Store a newly created resource in storage. (Podría usarse para import, pero usamos 'import' como ruta personalizada)
+     * Procesa el filtro y genera el reporte de retrasos.
      */
-    public function store(Request $request)
-    {
-        //
-    }
+    // En AsistenciaController.php, reemplazar el método generarReporte
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Asistencia $asistencia)
-    {
-        //
-    }
+public function generarReporte(Request $request)
+{
+    $request->validate([
+        'mes_reporte' => 'required|integer|min:1|max:12',
+        'anio_reporte' => 'required|integer|min:2020|max:' . (date('Y') + 1),
+    ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Asistencia $asistencia)
-    {
-        //
-    }
+    $mes = $request->input('mes_reporte');
+    $anio = $request->input('anio_reporte');
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Asistencia $asistencia)
-    {
-        //
-    }
+    // --- CONSULTA CORREGIDA Y ROBUSTA ---
+    $resultados = Retraso::selectRaw('empleado_id, tipo, COUNT(*) as total_retrasos, SUM(minutos_retraso) as total_minutos')
+                        ->with('empleado')
+                        // Usamos whereRaw para forzar la comparación numérica de las partes de la fecha
+                        ->whereRaw('MONTH(fecha) = ? AND YEAR(fecha) = ?', [$mes, $anio])
+                        ->groupBy('empleado_id', 'tipo')
+                        ->orderBy('empleado_id', 'asc')
+                        ->get();
+                        
+    $meses = [1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'];
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Asistencia $asistencia)
-    {
-        //
-    }
+    return view('asistencias.reporte', compact('resultados', 'mes', 'anio', 'meses'));
+}
+    
+    // --- Métodos vacíos del 'resource' ---
+    public function create() { }
+    public function store(Request $request) { }
+    public function show(Asistencia $asistencia) { } 
+    public function edit(Asistencia $asistencia) { }
+    public function update(Request $request, Asistencia $asistencia) { }
+    public function destroy(Asistencia $asistencia) { }
 }

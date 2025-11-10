@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
 <head>
 <title>Planilla Mensual - {{ $mes }} {{ $anio }}</title>
@@ -86,7 +85,8 @@
         font-weight: bold;
     }
     /* AJUSTE DE ANCHOS DE COLUMNA (OPTIMIZADO) */
-    .col-nombre { text-align: left; width: 13.5%; } 
+    .col-nro { width: 2.5%; } /* <-- NUEVA CLASE */
+    .col-nombre { text-align: left; width: 12.5%; } /* Reducido para Nro */
     .col-identidad { width: 6%; } 
     .col-date { width: 5%; } 
     .col-num-small { width: 3%; } 
@@ -151,6 +151,7 @@
 <table>
     <thead>
         <tr>
+            <th rowspan="2" class="col-nro">Nro.</th>
             {{-- 1 --}}
             <th rowspan="2" class="col-identidad">DOC IDENTIDAD NRO.</th>
             {{-- 2, 3, 4 --}}
@@ -199,8 +200,10 @@
             $sumaTotalDescuento = 0; $sumaLiquidoPagable = 0;
         @endphp
 
-        @foreach ($datosPlanilla as $index => $nomina)
+        @foreach ($datosPlanilla as $nomina)
             <tr>
+                <td class="col-nro" style="text-align: center;">{{ $loop->iteration }}</td>
+                
                 <td class="col-identidad">{{ $nomina->empleado->documento_identidad }}</td>
                 <td class="col-nombre">{{ $nomina->empleado->primerapellido }}</td>
                 <td class="col-nombre">{{ $nomina->empleado->segundoapellido }}</td>
@@ -253,7 +256,7 @@
 
         {{-- Fila de Sumas Totales --}}
         <tr class="sumas-totales">
-            <td colspan="4" style="text-align: center;">SUMAS TOTALES</td>
+            <td colspan="5" style="text-align: center;">SUMAS TOTALES</td>
             <td colspan="3"></td> {{-- F. INGRESO, DIAS PAG., HRS PAG. --}}
             <td class="col-money-base">{{ number_format($sumaHaberBasico, 2, ',', '.') }}</td>
             <td class="col-money-base">{{ number_format($sumaBonoAntiguedad, 2, ',', '.') }}</td>
