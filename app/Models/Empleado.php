@@ -5,7 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Permiso;
-use App\Models\Subsidio; // --- NUEVO --- Importar el modelo Subsidio
+use App\Models\Subsidio;
+use Carbon\Carbon; // <<< ¡IMPORTANTE! Asegúrate de incluir Carbon
 
 class Empleado extends Model
 {
@@ -42,7 +43,10 @@ class Empleado extends Model
         'estado' => 'boolean',
     ];
 
-    // ... (Mutators setNombresAttribute, etc. se quedan igual) ...
+    // =================================================================
+    //                                 ACCESSORS / MUTATORS
+    // =================================================================
+
     public function setNombresAttribute($value)
     {
         $this->attributes['nombres'] = mb_strtoupper($value, 'UTF-8');
@@ -94,6 +98,20 @@ class Empleado extends Model
     }
 
 
+    public function setCreatedAt($value)
+    {
+        $this->fecha_creacion = $value;
+    }
+
+    public function setUpdatedAt($value)
+    {
+        $this->fecha_modificacion = $value;
+    }
+
+    // =================================================================
+    //                                 RELACIONES
+    // =================================================================
+
     public function usuario()
     {
         return $this->hasOne(Usuario::class, 'empleado_id');
@@ -104,41 +122,78 @@ class Empleado extends Model
         return $this->hasMany(Permiso::class, 'empleado_id');
     }
 
-    // --- NUEVO ---
-    // Relación: Un empleado puede tener muchos subsidios.
     public function subsidios()
     {
         return $this->hasMany(Subsidio::class, 'empleado_id');
     }
-    // --- FIN NUEVO ---
 
-    public function setCreatedAt($value)
+    // =================================================================
+    //                                LÓGICA DE VACACIONES
+    // =================================================================
+
+    /**
+     * Calcula la antigüedad del empleado en AÑOS completos al día de hoy.
+     * @return int
+     */
+    public function getAntiguedadEnAnios(): int
     {
-        $this->fecha_creacion = $value;
+        $fechaIngreso = Carbon::parse($this->fecha_ingreso);
+        return $fechaIngreso->diffInYears(Carbon::now());
     }
 
-    public function setUpdatedAt($value)
+    /**
+     * Devuelve el derecho a días de vacación para el período anual ACTUAL
+     * según la antigüedad cumplida en la ley boliviana.
+     * @return float Días de vacaciones base anuales.
+     */
+    public function calcularDerechoAnual(): float
     {
-        $this->fecha_modificacion = $value;
-    }
-    
-    public function getSaldoVacaciones(int $exceptPermisoId = null): float
-    {
-        // ... (Tu lógica de getSaldoVacaciones se queda igual) ...
-        $dias_base_anuales = 15.0;
+        $antiguedad = $this->getAntiguedadEnAnios();
 
-        $query = $this->permisos()
-            ->where('tipo_permiso', 'VACACION')
-            ->where('estado', 'APROBADO'); 
-
-        if ($exceptPermisoId) {
-            $query->where('id', '!=', $exceptPermisoId);
+        if ($antiguedad >= 10) {
+            return 30.0; // Más de 10 años
+        } elseif ($antiguedad >= 5) {
+            return 20.0; // Entre 5 y 10 años
+        } elseif ($antiguedad >= 1) {
+            return 15.0; // Entre 1 y 5 años
         }
+        return 0.0; // Menos de 1 año
+    }
 
-        $dias_consumidos = $query->sum('dias_solicitados');
+    /**
+     * **FUNCIÓN CLAVE: CALCULA EL SALDO TOTAL DE DÍAS DISPONIBLES.**
+     * Suma el derecho ganado por cada año completo y resta lo ya usado (APROBADO).
+     * @param int|null $excludePermisoId ID del permiso a ignorar en la deducción (usado en el UPDATE).
+     * @return float Saldo de vacaciones actual en días.
+     */
+    public function getSaldoVacaciones(int $excludePermisoId = null): float
+    {
+        $aniosCompletos = $this->getAntiguedadEnAnios();
+        $diasGanadosBrutos = 0.0;
 
-        $saldo = $dias_base_anuales - $dias_consumidos;
+        // 1. CALCULAR DÍAS GANADOS (Acumulación Histórica por aniversario)
+        for ($antiguedadCumplida = 1; $antiguedadCumplida <= $aniosCompletos; $antiguedadCumplida++) {
+            
+            // Lógica basada en la antigüedad CUMPLIDA
+            if ($antiguedadCumplida >= 10) {
+                $diasGanadosBrutos += 30.0;
+            } elseif ($antiguedadCumplida >= 5) {
+                $diasGanadosBrutos += 20.0;
+            } elseif ($antiguedadCumplida >= 1) {
+                $diasGanadosBrutos += 15.0;
+            }
+        }
+        
+        // 2. DEDUCCIÓN (Días de VACACIÓN APROBADOS)
+        $diasTomadosAprobados = $this->permisos()
+            ->where('tipo_permiso', 'VACACION')
+            ->where('estado', 'APROBADO')
+            ->when($excludePermisoId, fn($query) => $query->where('id', '!=', $excludePermisoId))
+            ->sum('dias_solicitados');
+            
+        // 3. SALDO FINAL
+        $saldoFinal = $diasGanadosBrutos - $diasTomadosAprobados;
 
-        return max(0.0, $saldo);
+        return max(0.0, $saldoFinal); 
     }
 }

@@ -4,7 +4,6 @@
 
 @section('content')
 
-<!-- Estilos dedicados para esta vista (usando los colores de su app.css: #942044) -->
 <style>
     /* Estructura de la tarjeta */
     .permiso-card {
@@ -119,22 +118,18 @@
 
 <div class="permiso-card">
     
-    <!-- HEADER VISUAL (usa el color #942044) -->
     <div class="card-header">
         <h1>SOLICITUD DE PERMISO #{{ $permiso->id }}</h1>
-         @php
+          @php
             // Se usa la clase badge-ESTADO definida en el <style>
             $statusClass = 'badge-' . $permiso->estado;
-        @endphp
+          @endphp
         <span class="badge {{ $statusClass }}">{{ $permiso->estado }}</span>
     </div>
     
-    <!-- CONTENIDO INTERIOR -->
     <div class="card-content">
-        <!-- Título secundario (Tipo de Permiso) -->
         <h2 class="section-title">{{ str_replace('_', ' ', $permiso->tipo_permiso) }}</h2>
         
-        <!-- INFORMACIÓN DEL EMPLEADO -->
         <div class="info-box">
             <h3>Información del Solicitante</h3>
             <div class="detail-grid">
@@ -144,27 +139,55 @@
             </div>
         </div>
         
-        <!-- RESUMEN DE DÍAS DE VACACIONES (NUEVA SECCIÓN) -->
+        {{-- Solo mostrar la caja si el permiso es de VACACIÓN --}}
+        @if ($permiso->tipo_permiso === 'VACACION')
         <div class="info-box" style="background-color: #fff7e6; border-color: #ffebcc; border-left: 5px solid #ffaa00;">
-            <h3>Resumen de Vacaciones (Saldo)</h3>
-            <p class="detail-item">
-                <!-- Se asume que $permiso->empleado->saldo_vacaciones existe. AJUSTE ESTA VARIABLE SI ES NECESARIO. -->
+            <h3>Resumen y Saldo de Vacaciones</h3>
+            <div class="detail-grid" style="grid-template-columns: repeat(3, 1fr);">
                 @php
-                    $saldo = $permiso->empleado->saldo_vacaciones ?? 0.0; // Usar 0.0 si no existe la variable
-                    // Formato sin ceros a la derecha y pluralización
-                    $formattedSaldo = rtrim(rtrim(number_format($saldo, 3, '.', ''), '0'), '.');
-                    $unidadSaldo = ($saldo == 1.0 || $saldo == 1) ? 'día disponible' : 'días disponibles';
+                    // 1. Obtener los datos calculados del Empleado (sin deducir este permiso)
+                    $antiguedad = $permiso->empleado->getAntiguedadEnAnios();
+                    $derechoAnual = $permiso->empleado->calcularDerechoAnual();
+                    
+                    // Saldo bruto: total acumulado menos otros permisos aprobados
+                    $saldoBruto = $permiso->empleado->getSaldoVacaciones($permiso->id); 
+                    $diasSolicitados = $permiso->dias_solicitados;
+                    
+                    // Saldo neto proyectado: lo que quedará si este permiso se aprueba
+                    $saldoNetoProyectado = max(0, $saldoBruto - $diasSolicitados);
+
+                    // Formato para mostrar
+                    $formattedNeto = rtrim(rtrim(number_format($saldoNetoProyectado, 3, '.', ''), '0'), '.');
+                    $unidadSaldo = ($saldoNetoProyectado == 1.0 || $saldoNetoProyectado == 1) ? 'día restante' : 'días restantes';
+                    
+                    // Mostrar si la solicitud excede el saldo
+                    $excedeSaldo = $diasSolicitados > $saldoBruto;
+
                 @endphp
-                <strong>Días de Vacaciones Restantes:</strong> <span class="dias-solicitados" style="color: #ffaa00;">{{ $formattedSaldo }} {{ $unidadSaldo }}</span>
-            </p>
-            <p style="font-size: 0.85rem; color: #856404; margin-top: 0.5rem;">
-                * Este es el saldo antes de aplicar esta solicitud.
-            </p>
+                
+                <p class="detail-item">
+                    <strong>Antigüedad:</strong> 
+                    <span style="color: #942044; font-weight: bold;">{{ $antiguedad }} años</span>
+                </p>
+                <p class="detail-item">
+                    <strong>Derecho Anual Actual:</strong> 
+                    <span style="color: #942044; font-weight: bold;">{{ $derechoAnual }} días</span>
+                </p>
+                <div class="detail-item">
+                    <strong>Saldo Proyectado (si se aprueba):</strong> 
+                    <span class="dias-solicitados" style="color: {{ $excedeSaldo ? '#dc3545' : '#ffaa00' }}; font-size: 1.5rem;">
+                        {{ $formattedNeto }} {{ $unidadSaldo }}
+                    </span>
+                    @if ($excedeSaldo)
+                        <p class="text-danger" style="font-size: 0.85rem; margin-top: 0.5rem; font-weight: bold;">
+                            ⚠️ Esta solicitud EXCEDERÍA el saldo disponible.
+                        </p>
+                    @endif
+                </div>
+            </div>
+            
         </div>
-        <!-- FIN RESUMEN DE DÍAS DE VACACIONES -->
-        
-        
-        <!-- DETALLES DE LA SOLICITUD -->
+        @endif
         <h3 class="section-title">Detalles del Período</h3>
         <div class="detail-grid">
             <p class="detail-item"><strong>Fecha Solicitud:</strong> <span>{{ \Carbon\Carbon::parse($permiso->fecha_solicitud)->format('d/m/Y') }}</span></p>
@@ -176,7 +199,6 @@
                 @php
                     $dias = $permiso->dias_solicitados;
                     // Formatear el número para eliminar los ceros a la derecha y los puntos innecesarios (ej: 2.000 -> 2)
-                    // Usamos number_format con 3 decimales, luego rtrim para quitar ceros y puntos/comas si es necesario.
                     $formattedDays = rtrim(rtrim(number_format($dias, 3, '.', ''), '0'), '.');
                     
                     // Decidir si usar 'día' o 'días'
@@ -195,7 +217,6 @@
 
         </div>
 
-        <!-- MOTIVO -->
         <div style="margin-bottom: 2rem;">
             <h3 class="section-title">Motivo de la Solicitud</h3>
             <div class="motivo-box">
@@ -203,7 +224,6 @@
             </div>
         </div>
         
-        <!-- Botón de Regreso -->
         <div class="btn-container">
             <a href="{{ route('permisos.index') }}" class="btn btn-primary">
                 <i class="fas fa-arrow-left"></i> Volver al Listado

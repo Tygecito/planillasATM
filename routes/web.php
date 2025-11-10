@@ -59,6 +59,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Módulo de Permisos (sustituye a vacaciones)
     Route::resource('permisos', PermisoController::class);
+    
+    Route::get('permisos/reporte/vacaciones', [PermisoController::class, 'reporteVacaciones'])
+    ->name('permisos.reporte.vacaciones');
 
     // Módulo de Usuarios (CRUD completo)
     Route::resource('usuarios', UsuarioController::class);
