@@ -1,69 +1,94 @@
 // ==============================================
-// FUNCIÓN PARA APLICAR SMN GENERAL
+// FUNCIÓN PARA APLICAR SMN GENERAL Y RC-IVA GENERAL
 // ==============================================
 
-/**
- * Aplica el valor del SMN General (Salario Mínimo Nacional) 
- * a todas las filas de empleados y recalcula sus totales.
- */
-function aplicarSMNGeneral() {
-    // 1. Obtener el input del SMN General
-    const smnGeneralInput = document.getElementById('smn_comun');
-    let smnValor = smnGeneralInput.value;
+const ALICUOTA_IVA = 0.13; // 13% para RC-IVA
+const CREDITOS_SMN_FACTOR = 1; // 1 SMN para Crédito Fijo (D.S. 5383)
 
-    // 2. Formatear el valor (similar a la validación 'onblur')
-    const num = parseFloat(smnValor);
-    if (!isNaN(num)) {
-        smnValor = num.toFixed(2);
+/**
+ * Función central para calcular RC-IVA, Saldo Anterior y Saldo Siguiente.
+ */
+function calcularRCIVA(totalGanado, smn, saldoAnterior, f110Monto) {
+    const tg = parseFloat(totalGanado) || 0;
+    const smnVal = parseFloat(smn) || 0;
+    const saldoAnt = parseFloat(saldoAnterior) || 0;
+    const f110 = parseFloat(f110Monto) || 0;
+    
+    let rcIvaPagar = 0;
+    let saldoSiguiente = 0;
+
+    // 1. CÁLCULO DEL SUELDO NETO (Base Imponible)
+    const aporteLaboral = calcularAporteLaboral(tg);
+    const ans = calcularANS(tg);
+    const totalDescuentosLey = aporteLaboral + ans;
+    const sueldoNeto = tg - totalDescuentosLey;
+
+    // 2. DETERMINAR BASE GRAVADA (Restar 2 SMN)
+    const minNoImponible = 2 * smnVal;
+    let baseGravada = sueldoNeto - minNoImponible;
+
+    // LÓGICA DE COMPENSACIÓN
+    if (baseGravada > 0) {
+        const impuestoBruto = baseGravada * ALICUOTA_IVA;
+        const creditoFijo = (CREDITOS_SMN_FACTOR * smnVal) * ALICUOTA_IVA;
+        const creditoF110 = f110 * ALICUOTA_IVA;
+        const totalCreditos = creditoFijo + creditoF110;
+        
+        let impuestoNeto = impuestoBruto - totalCreditos;
+
+        if (impuestoNeto > 0) {
+            if (saldoAnt >= impuestoNeto) {
+                saldoSiguiente = saldoAnt - impuestoNeto;
+                rcIvaPagar = 0;
+            } else {
+                rcIvaPagar = impuestoNeto - saldoAnt;
+                saldoSiguiente = 0;
+            }
+        } else {
+            saldoSiguiente = saldoAnt + Math.abs(impuestoNeto);
+            rcIvaPagar = 0;
+        }
     } else {
-        smnValor = '0.00';
+        saldoSiguiente = saldoAnt + Math.abs(baseGravada) * ALICUOTA_IVA;
+        rcIvaPagar = 0;
     }
     
-    // Actualiza el campo general para que muestre el formato 0.00
-    smnGeneralInput.value = smnValor;
+    return {
+        rc_iva_pagar: Math.max(0, rcIvaPagar),
+        rc_iva_saldo_siguiente: Math.max(0, saldoSiguiente)
+    };
+}
 
-    // 3. Encontrar todos los inputs de SMN individuales en la tabla
-    const smnInputsIndividuales = document.querySelectorAll('.smn-input');
+/**
+ * Aplica el SMN General y dispara el recálculo en todas las filas.
+ */
+function aplicarSMNGeneral() {
+    const smnGeneralInput = document.getElementById('smn_comun');
+    
+    let smnValor = parseFloat(smnGeneralInput.value) || 0;
+    smnGeneralInput.value = smnValor.toFixed(2);
 
-    // 4. Recorrer cada input, asignarle el valor y recalcular la fila
-    smnInputsIndividuales.forEach(input => {
-        input.value = smnValor;
+    const tabla = document.querySelector('.nominas-table');
+    
+    // Aplicar SMN y Recalcular toda la tabla
+    tabla.querySelectorAll('.smn-input').forEach(input => {
+        input.value = smnValor.toFixed(2);
         calcularTotal(input); 
     });
 }
 
 // ==============================================
-// CONSTANTES Y CONFIGURACIÓN
+// CONSTANTES Y CÁLCULOS BASE (EXISTENTES)
 // ==============================================
 
-const PORCENTAJE_APORTE_LABORAL = 12.71; // 12.71% para AFP
-const UMBRALES_ANS = {
-    umbral1: 13000,
-    umbral2: 25000,
-    umbral3: 35000
-};
-const PORCENTAJES_ANS = {
-    tramo1: 1.15,
-    tramo2: 5.74,
-    tramo3: 11.48
-};
-
-// Tabla de porcentajes de bono de antigüedad
 const PORCENTAJES_ANTIGUEDAD = [
-    {min: 2, max: 4, porcentaje: 5},
-    {min: 5, max: 7, porcentaje: 11},
-    {min: 8, max: 10, porcentaje: 18},
-    {min: 11, max: 14, porcentaje: 26},
-    {min: 15, max: 19, porcentaje: 34},
-    {min: 20, max: 24, porcentaje: 42},
+    {min: 2, max: 4, porcentaje: 5}, {min: 5, max: 7, porcentaje: 11},
+    {min: 8, max: 10, porcentaje: 18}, {min: 11, max: 14, porcentaje: 26},
+    {min: 15, max: 19, porcentaje: 34}, {min: 20, max: 24, porcentaje: 42},
     {min: 25, max: 999, porcentaje: 50}
 ];
 
-// ==============================================
-// FUNCIONES DE CÁLCULO AUTOMÁTICO
-// ==============================================
-
-function calcularAntiguedad(fechaIngreso, smn) {
+function calcularAntiguedad(fechaIngreso, smn) { /* ... (Lógica de Antigüedad) ... */
     const hoy = new Date();
     const ingreso = new Date(fechaIngreso);
     
@@ -87,10 +112,13 @@ function calcularAntiguedad(fechaIngreso, smn) {
     return (baseCalculo * porcentaje.porcentaje) / 100;
 }
 
+const PORCENTAJE_APORTE_LABORAL = 12.71;
 function calcularAporteLaboral(totalGanado) {
     return (parseFloat(totalGanado) * PORCENTAJE_APORTE_LABORAL) / 100;
 }
 
+const UMBRALES_ANS = {umbral1: 13000, umbral2: 25000, umbral3: 35000};
+const PORCENTAJES_ANS = {tramo1: 1.15, tramo2: 5.74, tramo3: 11.48};
 function calcularANS(totalGanado) {
     const tg = parseFloat(totalGanado);
     let ansTotal = 0;
@@ -111,27 +139,31 @@ function calcularANS(totalGanado) {
 
 
 // ==============================================
-// FUNCIÓN PRINCIPAL DE CÁLCULO (ACTUALIZADA)
+// FUNCIÓN PRINCIPAL DE CÁLCULO (INCLUYE TODA LA LÓGICA)
 // ==============================================
 
 function calcularTotal(input) {
     const row = input.closest('tr');
     
-    // --- 1. OBTENER VALORES GLOBALES ---
-    // Usamos el valor general de "Días Pagados"
+    // --- 1. OBTENER VALORES GLOBALES Y LOCALES ---
     const diasPagadosInput = document.getElementById('dias_pagados');
-    const diasPagados = parseInt(diasPagadosInput.value) || 30; // 30 por defecto si está vacío
+    const diasPagados = parseInt(diasPagadosInput.value) || 30;
 
-    // --- 2. OBTENER VALORES DE LA FILA ---
     const smnInput = row.querySelector('.smn-input');
     const haberBasicoInput = row.querySelector('.haber-basico-input');
-    const horasExtrasInput = row.querySelector('[name*="[horas_extras]"]'); // Campo de cantidad
+    const horasExtrasInput = row.querySelector('[name*="[horas_extras]"]');
     
+    // Inputs RC-IVA (LEER CAMPOS DE LA FILA)
+    const rcIvaF110MontoInput = row.querySelector('.rc-iva-f110-monto-input');
+    const rcIvaSaldoAnteriorInput = row.querySelector('.rc-iva-saldo-anterior-input');
+
     const smn = parseFloat(smnInput.value) || 0;
     const haberBasico = parseFloat(haberBasicoInput.value) || 0;
     const horasExtras = parseInt(horasExtrasInput.value) || 0;
+    const f110Monto = parseFloat(rcIvaF110MontoInput.value) || 0;
+    const saldoAnterior = parseFloat(rcIvaSaldoAnteriorInput.value) || 0;
 
-    // --- 3. VALIDACIÓN SMN vs HABER BÁSICO ---
+    // --- 2. VALIDACIÓN SMN vs HABER BÁSICO (EXISTENTE) ---
     if (smn > 0 && haberBasico > 0 && haberBasico < smn) {
         haberBasicoInput.classList.add('is-invalid');
         haberBasicoInput.title = `El haber básico (${haberBasico}) no puede ser menor al SMN (${smn}).`;
@@ -140,18 +172,25 @@ function calcularTotal(input) {
         haberBasicoInput.title = '';
     }
 
-    // --- 4. OBTENER INPUTS DE RESULTADOS ---
+    // --- 3. OBTENER INPUTS DE RESULTADOS Y VALORES MANUALES RESTANTES ---
     const bonoAntiguedadInput = row.querySelector('.bono-antiguedad-input');
     const aporteLaboralInput = row.querySelector('.aporte-laboral-input');
     const ansInput = row.querySelector('.ans-input');
-    const trabajoExtraordinarioInput = row.querySelector('[name*="[trabajo_extraordinario]"]'); // Campo de monto (Bs)
+    const trabajoExtraordinarioInput = row.querySelector('[name*="[trabajo_extraordinario]"]');
+    const rcIvaInput = row.querySelector('.rc-iva-input');
+    const rcIvaSaldoSiguienteInput = row.querySelector('.rc-iva-saldo-siguiente-input');
+    
+    // Obtenemos los valores de bonos MANUALES restantes
+    const pagoDomingo = parseFloat(row.querySelector('[name*="[pago_domingo]"]').value) || 0;
+    const otrosBonos = parseFloat(row.querySelector('[name*="[otros_bonos]"]').value) || 0;
+    const anticipos = parseFloat(row.querySelector('[name*="[anticipos]"]').value) || 0;
     
     let totalGanado = 0;
     let totalDescuentos = 0;
     
-    // --- 5. CALCULAR INGRESOS (TOTAL GANADO) ---
+    // --- 4. CÁLCULO DE INGRESOS ---
     
-    // 5a. Calcular Bono Antigüedad
+    // 4a. Calcular Bono Antigüedad (Fuerza el cálculo)
     let bonoAntiguedadCalculado = 0;
     const empleadoInfo = row.querySelector('.empleado-info');
     const fechaIngreso = empleadoInfo.getAttribute('data-fecha-ingreso');
@@ -160,34 +199,35 @@ function calcularTotal(input) {
         bonoAntiguedadCalculado = calcularAntiguedad(fechaIngreso, smn);
         bonoAntiguedadInput.value = bonoAntiguedadCalculado.toFixed(2);
     } else {
-        bonoAntiguedadCalculado = (parseFloat(bonoAntiguedadInput.value) || 0);
+        bonoAntiguedadCalculado = 0;
+        bonoAntiguedadInput.value = '0.00';
     }
 
-    // 5b. Calcular Horas Extras (¡NUEVO!)
+    // 4b. Calcular Horas Extras (Cálculo Contable)
     let pagoExtraCalculado = 0;
     if (haberBasico > 0 && diasPagados > 0 && horasExtras > 0) {
         const jornalDiario = haberBasico / diasPagados;
-        const valorHoraNormal = jornalDiario / 8; // Basado en 8 horas
-        const valorHoraExtra = valorHoraNormal * 2; // Pago doble
+        const valorHoraNormal = jornalDiario / 8;
+        const valorHoraExtra = valorHoraNormal * 2;
         pagoExtraCalculado = valorHoraExtra * horasExtras;
     }
-    // Escribir el resultado en el campo readonly
-    trabajoExtraordinarioInput.value = pagoExtraCalculado.toFixed(2);
+    // Escribir el resultado en el campo Trabajo Extra (Bs)
+    trabajoExtraordinarioInput.value = pagoExtraCalculado.toFixed(2); // <--- HACE EL CÁLCULO AUTOMÁTICO
 
     
-    // 5c. Sumar Total Ganado
+    // 4c. Sumar Total Ganado
     totalGanado = haberBasico + 
                   bonoAntiguedadCalculado +
-                  pagoExtraCalculado + // <-- Se usa el valor calculado
-                  (parseFloat(row.querySelector('[name*="[pago_domingo]"]').value) || 0) + 
-                  (parseFloat(row.querySelector('[name*="[otros_bonos]"]').value) || 0);
+                  pagoExtraCalculado + // <--- Usa el valor CALCULADO de Horas Extra
+                  pagoDomingo + 
+                  otrosBonos;
     
     const totalGanadoDisplay = row.querySelector('.total-ganado-display');
     if (totalGanadoDisplay) {
         totalGanadoDisplay.value = totalGanado.toFixed(2);
     }
 
-    // --- 6. CALCULAR DESCUENTOS ---
+    // --- 5. CÁLCULO DE RC-IVA Y APORTES DE LEY ---
     
     const aporteLaboralCalculado = calcularAporteLaboral(totalGanado);
     aporteLaboralInput.value = aporteLaboralCalculado.toFixed(2);
@@ -195,20 +235,30 @@ function calcularTotal(input) {
     const ansCalculado = calcularANS(totalGanado);
     ansInput.value = ansCalculado.toFixed(2);
     
+    // Calcular RC-IVA completo
+    const resultadoRCIVA = calcularRCIVA(totalGanado, smn, saldoAnterior, f110Monto);
+    
+    // Escribir resultados RC-IVA (Output Fields)
+    rcIvaInput.value = resultadoRCIVA.rc_iva_pagar.toFixed(2);
+    rcIvaSaldoSiguienteInput.value = resultadoRCIVA.rc_iva_saldo_siguiente.toFixed(2);
+    
+    // --- 6. CÁLCULO FINAL DE DESCUENTOS Y LÍQUIDO ---
+    
+    // Sumamos los descuentos finales (RC-IVA a pagar, AFP, ANS y Anticipos)
     totalDescuentos = aporteLaboralCalculado + 
                       ansCalculado + 
-                      (parseFloat(row.querySelector('[name*="[rc_iva]"]').value) || 0) + 
-                      (parseFloat(row.querySelector('[name*="[anticipos]"]').value) || 0);
+                      resultadoRCIVA.rc_iva_pagar + 
+                      anticipos;
 
     const totalDescuentoDisplay = row.querySelector('.total-descuento-display');
     if (totalDescuentoDisplay) {
         totalDescuentoDisplay.value = totalDescuentos.toFixed(2);
     }
 
-    // --- 7. CÁLCULO FINAL (Líquido Pagable) ---
+    // Cálculo del líquido: Total Ganado - Total Descuentos
     const total = totalGanado - totalDescuentos;
     const totalElement = row.querySelector('.total-value');
-    totalElement.textContent = total.toFixed(2);
+    totalElement.textContent = total.toFixed(2); // <--- Líquido Pagable Calculado
     
     if (total < 0) {
         totalElement.style.color = '#dc3545';
@@ -225,7 +275,8 @@ function calcularTotal(input) {
 function setupDecimalValidation() {
     document.querySelectorAll('.decimal-input:not(.integer-input)').forEach(input => {
         
-        if (input.readOnly) return;
+        // Excluimos campos de salida (readOnly)
+        if (input.readOnly) return; 
 
         input.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9.]/g, '');
@@ -276,7 +327,7 @@ function setupIntegerValidation() {
 
         input.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '');
-            calcularTotal(this); // Esto disparará el recálculo
+            calcularTotal(this);
         });
         
         input.addEventListener('blur', function() {
@@ -318,19 +369,26 @@ function setupFormSubmission() {
 // ==============================================
 
 function setupCommonFieldsCopy() {
-    // AÑADIMOS 'dias_pagados' a la lista de campos que disparan el recálculo
-    const commonFields = ['dias_pagados', 'horas_pagadas']; 
+    // RC-IVA F110 y Saldo Ant NO son globales, deben copiarse individualmente
+    const fieldsToCopy = ['smn_comun']; 
+    const generalFields = ['dias_pagados', 'horas_pagadas']; 
     
-    commonFields.forEach(field => {
-        const input = document.getElementById(field);
+    // Configurar el copiado del SMN y recálculo
+    fieldsToCopy.forEach(fieldId => {
+        const input = document.getElementById(fieldId);
+        if (input) {
+            input.addEventListener('change', aplicarSMNGeneral);
+        }
+    });
+
+    // Configurar los campos generales que solo disparan recálculo 
+    generalFields.forEach(fieldId => {
+        const input = document.getElementById(fieldId);
         if (input) {
             input.addEventListener('change', function() {
-                // (No necesitamos copiar estos valores a las filas, pero sí recalcular)
-                
-                // Recalcular todos los totales
                 document.querySelectorAll('.smn-input').forEach(inputFila => {
                     if (inputFila.closest('tr')) {
-                        calcularTotal(inputFila); // Recalcula cada fila
+                        calcularTotal(inputFila);
                     }
                 });
             });
@@ -339,7 +397,7 @@ function setupCommonFieldsCopy() {
 }
 
 // ==============================================
-// INICIALIZACIÓN AL CARGAR LA PÁGINA
+// INICIALIZACIÓN AL CARGAR LA PÁGINA (EXISTENTE)
 // ==============================================
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -348,7 +406,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setupFormSubmission();
     setupCommonFieldsCopy();
     
-    // Calcular totales iniciales para todas las filas
     document.querySelectorAll('.smn-input').forEach(input => {
         calcularTotal(input);
     });

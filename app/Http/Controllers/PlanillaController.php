@@ -10,7 +10,8 @@ use Exception;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PlanillaMensualExport;
 use App\Exports\PlanillaRCIvaExport;
-use App\Exports\PlanillaGestoraExport; // <-- Asegúrate que esté
+use App\Exports\PlanillaGestoraExport; 
+use Carbon\Carbon; // Importar Carbon
 
 class PlanillaController extends Controller
 {
@@ -30,7 +31,8 @@ class PlanillaController extends Controller
      */
     private function getDatosNomina(string $mes, int $anio)
     {
-        return Nomina::with('empleado')
+        // Añadimos la carga de 'empleado.subsidios' para cualquier reporte futuro
+        return Nomina::with('empleado.subsidios') 
             ->join('empleados', 'nominas.empleado_id', '=', 'empleados.id')
             ->where('nominas.mes', $mes)
             ->where('nominas.anio', $anio)
@@ -121,6 +123,7 @@ class PlanillaController extends Controller
     private function generarPlanillaRCIva($datosPlanilla, $mes, $anio, $formato, $nombreArchivo)
     {
         if ($formato === 'pdf') {
+            // Asegúrate de que tu vista PDF esté usando los datos correctos
             $pdf = Pdf::loadView('planillas.pdf.rc_iva', compact('datosPlanilla', 'mes', 'anio'));
             $pdf->setPaper('letter', 'landscape');
             return $pdf->download($nombreArchivo);
@@ -180,50 +183,74 @@ class PlanillaController extends Controller
         return $csv;
     }
 
+    /**
+     * --- FUNCIÓN RC-IVA CORREGIDA (Usa las nuevas columnas) ---
+     */
     private function generarCsvRCIva($datosPlanilla) {
         $columnas = [
-            'Nro.', 'CUR Dependiente (NIT)', 'Nombres y Apellidos', 'Monto Ingreso Neto',
-            'Dos (2) SMN Imponibles', 'Importe Sujeto a Impuesto', 'Impuesto RC-IVA (13%)',
-            '13% de Un (1) SMN', 'Impuesto Neto RC-IVA', 'F-110 Casilla 693',
-            'Saldo a Favor del Fisco', 'Saldo a Favor del Dependiente',
-            'Saldo Dependiente Período Anterior', 'Mntto de Valor', 'Saldo Anterior Actualizado',
-            'Saldo Utilizado', 'Impuesto RC-IVA Retenido', 'Saldo CF-IVA para el Mes Siguiente'
+            'Nro.', 'CUR Dependiente (NIT)', 'Nombres y Apellidos', 
+            'Monto Ingreso Neto (Base Imponible)', 'Dos (2) SMN Imponibles', 'Importe Sujeto a Impuesto', 
+            'Impuesto RC-IVA (13% Bruto)', '13% de Un (1) SMN', 'Total Crédito F.110', 
+            'Impuesto Neto (Saldo Fisco)', 'Saldo Dependiente Período Anterior', 'Saldo Utilizado', 
+            'Impuesto RC-IVA Retenido', 'Saldo CF-IVA para el Mes Siguiente'
         ];
         $csv = implode(',', $columnas) . "\n";
 
+        // Usamos el SMN del primer registro como base para el cálculo de compensación.
         $smn = (float)($datosPlanilla->first()?->smn ?? 2750.00);
         $smn_x_2 = $smn * 2;
-        $credito_fijo_1smn = $smn * 0.13;
+        $tasa_rc_iva = 0.13;
+        $credito_fijo_1smn = $smn * $tasa_rc_iva; // El crédito fijo D.S. 5383
 
         foreach ($datosPlanilla as $index => $nomina) {
             $empleado = $nomina->empleado;
-            $monto_ingreso_neto = $nomina->total_ganado - ($nomina->aporte_laboral + $nomina->aporte_nacional_solidario);
-            $dos_smn = $smn_x_2;
-            $base_imponible = max(0, $monto_ingreso_neto - $dos_smn);
-            $impuesto_rc_iva = $base_imponible * 0.13;
-            $credito_fijo_1smn_valor = $credito_fijo_1smn;
-            $impuesto_neto = max(0, $impuesto_rc_iva - $credito_fijo_1smn_valor);
-            $f110 = $nomina->f110_monto_facturas ?? 0;
-            $saldo_fisco = max(0, $impuesto_neto - $f110);
-            $saldo_dependiente_actual = max(0, $f110 - $impuesto_neto);
-            $saldo_anterior = $nomina->saldo_anterior_dependiente ?? 0;
-            $mantenimiento_valor = $nomina->mantenimiento_valor ?? 0;
-            $saldo_anterior_actualizado = $saldo_anterior + $mantenimiento_valor;
-            $saldo_utilizado = min($saldo_fisco, $saldo_anterior_actualizado);
-            $impuesto_retenido = max(0, $saldo_fisco - $saldo_utilizado);
-            $saldo_siguiente_mes = $saldo_dependiente_actual + ($saldo_anterior_actualizado - $saldo_utilizado);
             
+            // Reconstruir valores intermedios (la lógica exacta del JS)
+            $monto_ingreso_neto = $nomina->total_ganado - ($nomina->aporte_laboral + $nomina->aporte_nacional_solidario);
+            $base_imponible = max(0, $monto_ingreso_neto - $smn_x_2);
+            $impuesto_rc_iva_bruto = $base_imponible * $tasa_rc_iva;
+
+            // Datos de las nuevas columnas
+            $f110_monto_bruto = $nomina->rc_iva_f110_monto ?? 0;
+            $saldo_anterior = $nomina->rc_iva_saldo_anterior ?? 0;
+            $saldo_siguiente_final = $nomina->rc_iva_saldo_siguiente ?? 0;
+
+            // Calcular el crédito F110 usado
+            $credito_f110_valor = $f110_monto_bruto * $tasa_rc_iva;
+            
+            // Impuesto Neto (Impuesto Bruto - Crédito Fijo - Crédito F110)
+            $impuesto_neto_compensar = max(0, $impuesto_rc_iva_bruto - $credito_fijo_1smn - $credito_f110_valor); 
+
+            // Saldo Fisco (El impuesto neto antes de usar el saldo anterior)
+            $saldo_fisco = $impuesto_neto_compensar;
+
+            // Saldo Utilizado (Cuánto del saldo anterior se usó)
+            // Calculamos cuánto se necesitaba VS cuánto se tenía.
+            $saldo_utilizado = 0;
+            if ($impuesto_neto_compensar > 0) {
+                // Solo se usa si hay impuesto neto y hay saldo anterior
+                $saldo_utilizado = min($saldo_anterior, $impuesto_neto_compensar);
+            }
+
             $fila = [
-                $index + 1, $empleado->nit_dependiente ?? $empleado->documento_identidad,
+                $index + 1, 
+                $empleado->nit_dependiente ?? $empleado->documento_identidad,
                 $empleado->primerapellido . ' ' . $empleado->segundoapellido . ' ' . $empleado->nombres,
-                number_format($monto_ingreso_neto, 2, '.', ''), number_format($dos_smn, 2, '.', ''),
-                number_format($base_imponible, 2, '.', ''), number_format($impuesto_rc_iva, 2, '.', ''),
-                number_format($credito_fijo_1smn_valor, 2, '.', ''), number_format($impuesto_neto, 2, '.', ''),
-                number_format($f110, 2, '.', ''), number_format($saldo_fisco, 2, '.', ''),
-                number_format($saldo_dependiente_actual, 2, '.', ''), number_format($saldo_anterior, 2, '.', ''),
-                number_format($mantenimiento_valor, 2, '.', ''), number_format($saldo_anterior_actualizado, 2, '.', ''),
-                number_format($saldo_utilizado, 2, '.', ''), number_format($impuesto_retenido, 2, '.', ''),
-                number_format($saldo_siguiente_mes, 2, '.', ''),
+                
+                number_format($monto_ingreso_neto, 2, '.', ''), 
+                number_format($smn_x_2, 2, '.', ''),
+                number_format($base_imponible, 2, '.', ''), 
+                number_format($impuesto_rc_iva_bruto, 2, '.', ''),
+                
+                number_format($credito_fijo_1smn, 2, '.', ''),
+                number_format($credito_f110_valor, 2, '.', ''), 
+                
+                number_format($saldo_fisco, 2, '.', ''),
+                number_format($saldo_anterior, 2, '.', ''),
+                
+                number_format($saldo_utilizado, 2, '.', ''),
+                number_format($nomina->rc_iva, 2, '.', ''), // RC-IVA Retenido (Final)
+                number_format($saldo_siguiente_final, 2, '.', ''),
             ];
             $csv .= implode(',', $fila) . "\n";
         }
@@ -242,25 +269,25 @@ class PlanillaController extends Controller
         ];
         $csv = implode(',', $columnas) . "\n";
 
-        // --- CORRECCIÓN AQUÍ ---
         $mesesMap = [
             'Enero' => '01', 'Febrero' => '02', 'Marzo' => '03', 'Abril' => '04',
             'Mayo' => '05', 'Junio' => '06', 'Julio' => '07', 'Agosto' => '08',
             'Septiembre' => '09', 'Octubre' => '10', 'Noviembre' => '11', 'Diciembre' => '12'
         ];
         $mesNumero = $mesesMap[$mes] ?? '01';
-        // --- FIN DE LA CORRECCIÓN ---
 
         foreach ($datosPlanilla as $index => $nomina) {
             $empleado = $nomina->empleado;
 
-            list($primer_nombre, $segundo_nombre) = array_pad(explode(' ', $empleado->nombres, 2), 2, null);
-            
+            // Aseguramos que solo usamos el primer nombre como primer_nombre
+            $nombres_array = explode(' ', $empleado->nombres);
+            $primer_nombre = $nombres_array[0] ?? '';
+            $segundo_nombre = (isset($nombres_array[1]) && $nombres_array[1] !== '') ? $nombres_array[1] : null;
+
             $tipo_novedad = '';
             $fecha_novedad = null;
             $fecha_ingreso = \Carbon\Carbon::parse($empleado->fecha_ingreso);
             
-            // Usamos $mesNumero corregido
             if ($fecha_ingreso->month == $mesNumero && $fecha_ingreso->year == $anio) {
                 $tipo_novedad = 'I';
                 $fecha_novedad = $fecha_ingreso->format('Y-m-d');

@@ -7,6 +7,7 @@ use App\Models\Empleado;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB; // <-- NECESARIO PARA LAS TRANSACCIONES
 
 class NominaController extends Controller
 {
@@ -48,7 +49,7 @@ class NominaController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validar los datos básicos (como ya lo tienes)
+        // 1. Validar los datos básicos (incluyendo la validación de duplicados)
         $request->validate([
             'mes' => 'required|string|max:20',
             'anio' => 'required|integer|min:2000|max:2100',
@@ -69,84 +70,81 @@ class NominaController extends Controller
             'empleados.*.anticipos' => 'nullable|numeric|min:0',
         ]);
 
-        // --- INICIO DE LA NUEVA VALIDACIÓN DE DUPLICADOS ---
-
-        // 2. Obtener los IDs de los empleados que se están intentando crear
+        // 2. Validación de Duplicados (Tu lógica existente)
         $empleadoIds = array_keys($request->empleados);
-
-        // 3. Buscar si YA existen nóminas para estos empleados en este periodo
         $duplicados = Nomina::where('mes', $request->mes)
                             ->where('anio', $request->anio)
                             ->whereIn('empleado_id', $empleadoIds)
-                            ->with('empleado') // Cargar los datos del empleado para mostrar el nombre
+                            ->with('empleado')
                             ->get();
 
-        // 4. Si se encuentran duplicados, fallar y redirigir con un error claro
         if ($duplicados->isNotEmpty()) {
+            $nombresEmpleados = $duplicados->map(fn ($n) => $n->empleado ? $n->empleado->nombres . ' ' . $n->empleado->primerapellido : 'ID ' . $n->empleado_id)->implode(', ');
             
-            // Crear un mensaje de error con los nombres
-            $nombresEmpleados = $duplicados->map(function ($nomina) {
-                if ($nomina->empleado) {
-                    return $nomina->empleado->nombres . ' ' . $nomina->empleado->primerapellido;
-                }
-                return 'ID ' . $nomina->empleado_id; // Fallback
-            })->implode(', ');
-
-            // Redirigir de vuelta al formulario de creación con el error
             return redirect()->back()
-                ->withErrors([
-                    // Usamos una clave de error 'duplicado' para mostrarla en la vista
-                    'duplicado' => "No se pueden crear las nóminas. Los siguientes empleados ya tienen un registro para el periodo {$request->mes} {$request->anio}: {$nombresEmpleados}."
-                ])
-                ->withInput(); // Mantener los datos que el usuario ya había llenado
+                ->withErrors(['duplicado' => "No se pueden crear las nóminas. Los siguientes empleados ya tienen un registro para el periodo {$request->mes} {$request->anio}: {$nombresEmpleados}."])
+                ->withInput();
         }
         
-        // --- FIN DE LA NUEVA VALIDACIÓN ---
+        // --- INICIO DE LA TRANSACCIÓN CRÍTICA ---
+        DB::beginTransaction();
 
-        // 5. Si no hay duplicados, proceder con la creación
-        $nominasCreadas = 0;
-        foreach ($request->empleados as $empleadoId => $datos) {
-            
-            $totalGanado = ($datos['haber_basico'] ?? 0) + 
-                           ($datos['bono_antiguedad'] ?? 0) + 
-                           ($datos['trabajo_extraordinario'] ?? 0) + 
-                           ($datos['pago_domingo'] ?? 0) + 
-                           ($datos['otros_bonos'] ?? 0);
-            
-            $totalDescuentos = ($datos['aporte_laboral'] ?? 0) + 
-                               ($datos['aporte_nacional_solidario'] ?? 0) + 
-                               ($datos['rc_iva'] ?? 0) + 
-                               ($datos['anticipos'] ?? 0);
-            
-            $liquido = $totalGanado - $totalDescuentos;
+        try {
+            $nominasCreadas = 0;
+            foreach ($request->empleados as $empleadoId => $datos) {
+                
+                // Recalculo Total Ganado (requerido para guardar)
+                $totalGanado = ($datos['haber_basico'] ?? 0) + 
+                               ($datos['bono_antiguedad'] ?? 0) + 
+                               ($datos['trabajo_extraordinario'] ?? 0) + 
+                               ($datos['pago_domingo'] ?? 0) + 
+                               ($datos['otros_bonos'] ?? 0);
+                
+                // Recalculo Total Descuentos (requerido para guardar)
+                $totalDescuentos = ($datos['aporte_laboral'] ?? 0) + 
+                                   ($datos['aporte_nacional_solidario'] ?? 0) + 
+                                   ($datos['rc_iva'] ?? 0) + 
+                                   ($datos['anticipos'] ?? 0);
+                
+                $liquido = $totalGanado - $totalDescuentos;
 
-            Nomina::create([
-                'empleado_id' => $datos['empleado_id'],
-                'mes' => $request->mes,
-                'anio' => $request->anio,
-                'smn' => $datos['smn'] ?? null,
-                'haber_basico' => $datos['haber_basico'],
-                'horas_pagadas' => $request->horas_pagadas,
-                'horas_extras' => $datos['horas_extras'] ?? 0,
-                'dias_pagados' => $request->dias_pagados,
-                'bono_antiguedad' => $datos['bono_antiguedad'] ?? 0,
-                'trabajo_extraordinario' => $datos['trabajo_extraordinario'] ?? 0,
-                'pago_domingo' => $datos['pago_domingo'] ?? 0,
-                'otros_bonos' => $datos['otros_bonos'] ?? 0,
-                'total_ganado' => $totalGanado,
-                'aporte_laboral' => $datos['aporte_laboral'] ?? 0,
-                'aporte_nacional_solidario' => $datos['aporte_nacional_solidario'] ?? 0,
-                'rc_iva' => $datos['rc_iva'] ?? 0,
-                'anticipos' => $datos['anticipos'] ?? 0,
-                'total_descuentos' => $totalDescuentos,
-                'liquido' => $liquido
-            ]);
+                Nomina::create([
+                    'empleado_id' => $datos['empleado_id'],
+                    'mes' => $request->mes,
+                    'anio' => $request->anio,
+                    'smn' => $datos['smn'] ?? null,
+                    'haber_basico' => $datos['haber_basico'],
+                    'horas_pagadas' => $request->horas_pagadas,
+                    'horas_extras' => $datos['horas_extras'] ?? 0,
+                    'dias_pagados' => $request->dias_pagados,
+                    'bono_antiguedad' => $datos['bono_antiguedad'] ?? 0,
+                    'trabajo_extraordinario' => $datos['trabajo_extraordinario'] ?? 0,
+                    'pago_domingo' => $datos['pago_domingo'] ?? 0,
+                    'otros_bonos' => $datos['otros_bonos'] ?? 0,
+                    'total_ganado' => $totalGanado,
+                    'aporte_laboral' => $datos['aporte_laboral'] ?? 0,
+                    'aporte_nacional_solidario' => $datos['aporte_nacional_solidario'] ?? 0,
+                    'rc_iva' => $datos['rc_iva'] ?? 0,
+                    'anticipos' => $datos['anticipos'] ?? 0,
+                    'total_descuentos' => $totalDescuentos,
+                    'liquido' => $liquido
+                ]);
 
-            $nominasCreadas++;
+                $nominasCreadas++;
+            }
+
+            DB::commit(); // COMMIT: Si todo el lote se creó con éxito
+            
+            return redirect()->route('nominas.index')
+                ->with('success', "Se crearon {$nominasCreadas} nóminas correctamente.");
+
+        } catch (\Throwable $e) {
+            DB::rollBack(); // ROLLBACK: Deshacer todas las inserciones
+
+            return redirect()->back()
+                ->with('error', 'Fallo crítico al guardar las nóminas. Todos los cambios han sido deshechos.')
+                ->withInput();
         }
-
-        return redirect()->route('nominas.index')
-            ->with('success', "Se crearon {$nominasCreadas} nóminas correctamente.");
     }
 
     /**
@@ -181,7 +179,8 @@ class NominaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Esto está correcto
+        // --- El método update también necesita protección de transacción si hay lógica dual ---
+        
         $nomina = Nomina::findOrFail($id);
         
         $request->validate([
@@ -202,44 +201,53 @@ class NominaController extends Controller
             'rc_iva' => 'nullable|numeric|min:0',
             'anticipos' => 'nullable|numeric|min:0',
         ]);
-
-        $total_ganado = ($request->haber_basico ?? 0) + 
-                       ($request->bono_antiguedad ?? 0) + 
-                       ($request->trabajo_extraordinario ?? 0) + 
-                       ($request->pago_domingo ?? 0) + 
-                       ($request->otros_bonos ?? 0);
         
-        $total_descuentos = ($request->aporte_laboral ?? 0) + 
-                            ($request->aporte_nacional_solidario ?? 0) + 
-                            ($request->rc_iva ?? 0) + 
-                            ($request->anticipos ?? 0);
+        // La transacción para update no es crítica a menos que haya operaciones duales, pero la añadimos por buenas prácticas:
+        DB::beginTransaction();
+
+        try {
+            $total_ganado = ($request->haber_basico ?? 0) + 
+                            ($request->bono_antiguedad ?? 0) + 
+                            ($request->trabajo_extraordinario ?? 0) + 
+                            ($request->pago_domingo ?? 0) + 
+                            ($request->otros_bonos ?? 0);
+            
+            $total_descuentos = ($request->aporte_laboral ?? 0) + 
+                                ($request->aporte_nacional_solidario ?? 0) + 
+                                ($request->rc_iva ?? 0) + 
+                                ($request->anticipos ?? 0);
+            
+            $liquido = $total_ganado - $total_descuentos;
+
+            $nomina->update([
+                'empleado_id' => $request->empleado_id,
+                'mes' => $request->mes,
+                'anio' => $request->anio,
+                'smn' => $request->smn ?? null,
+                'haber_basico' => $request->haber_basico,
+                'horas_pagadas' => $request->horas_pagadas,
+                'horas_extras' => $request->horas_extras ?? 0,
+                'dias_pagados' => $request->dias_pagados,
+                'bono_antiguedad' => $request->bono_antiguedad ?? 0,
+                'trabajo_extraordinario' => $request->trabajo_extraordinario ?? 0,
+                'pago_domingo' => $request->pago_domingo ?? 0,
+                'otros_bonos' => $request->otros_bonos ?? 0,
+                'total_ganado' => $total_ganado,
+                'aporte_laboral' => $request->aporte_laboral ?? 0,
+                'aporte_nacional_solidario' => $request->aporte_nacional_solidario ?? 0,
+                'rc_iva' => $request->rc_iva ?? 0,
+                'anticipos' => $request->anticipos ?? 0,
+                'total_descuentos' => $total_descuentos,
+                'liquido' => $liquido
+            ]);
+
+            DB::commit();
+            return redirect()->route('nominas.index')->with('success', 'Nómina actualizada correctamente.');
         
-        $liquido = $total_ganado - $total_descuentos;
-
-        $nomina->update([
-            'empleado_id' => $request->empleado_id,
-            'mes' => $request->mes,
-            'anio' => $request->anio,
-            'smn' => $request->smn ?? null,
-            'haber_basico' => $request->haber_basico,
-            'horas_pagadas' => $request->horas_pagadas,
-            'horas_extras' => $request->horas_extras ?? 0,
-            'dias_pagados' => $request->dias_pagados,
-            'bono_antiguedad' => $request->bono_antiguedad ?? 0,
-            'trabajo_extraordinario' => $request->trabajo_extraordinario ?? 0,
-            'pago_domingo' => $request->pago_domingo ?? 0,
-            'otros_bonos' => $request->otros_bonos ?? 0,
-            'total_ganado' => $total_ganado,
-            'aporte_laboral' => $request->aporte_laboral ?? 0,
-            'aporte_nacional_solidario' => $request->aporte_nacional_solidario ?? 0,
-            'rc_iva' => $request->rc_iva ?? 0,
-            'anticipos' => $request->anticipos ?? 0,
-            'total_descuentos' => $total_descuentos,
-            'liquido' => $liquido
-        ]);
-
-        return redirect()->route('nominas.index')
-            ->with('success', 'Nómina actualizada correctamente.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Fallo al actualizar la nómina. Detalles: ' . $e->getMessage())->withInput();
+        }
     }
 
     /**
@@ -247,10 +255,20 @@ class NominaController extends Controller
      */
     public function destroy($id)
     {
-        // Esto está correcto
-        $nomina = Nomina::findOrFail($id);
-        $nomina->delete();
-        return redirect()->route('nominas.index')->with('success', 'Nómina eliminada correctamente.');
+        // Aunque no es estrictamente necesario, añadimos la transacción
+        DB::beginTransaction();
+
+        try {
+            $nomina = Nomina::findOrFail($id);
+            $nomina->delete();
+            
+            DB::commit();
+            return redirect()->route('nominas.index')->with('success', 'Nómina eliminada correctamente.');
+        
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Fallo al eliminar la nómina: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -258,7 +276,7 @@ class NominaController extends Controller
      */
     public function download($id)
     {
-        // Esto está correcto
+        // No requiere transacción (solo es una operación de lectura)
         $nomina = Nomina::with('empleado')->findOrFail($id);
         $pdf = PDF::loadView('nominas.pdf', compact('nomina'));
         return $pdf->download('nomina-'.$nomina->empleado->primerapellido.'-'.$nomina->mes.'-'.$nomina->anio.'.pdf');

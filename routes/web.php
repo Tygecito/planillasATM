@@ -5,10 +5,11 @@ use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\NominaController;
 use App\Http\Controllers\PlanillaController;
-use App\Http\Controllers\AsistenciaController; // ¡Tu controlador de Asistencia!
+use App\Http\Controllers\AsistenciaController; 
 use App\Http\Controllers\PermisoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\SubsidioController; 
+use App\Http\Controllers\FeriadoController; // <<< 1. NUEVA INCLUSIÓN
 use Illuminate\Support\Facades\Route;
 
 // Rutas de autenticación
@@ -53,7 +54,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('asistencias/importar', [AsistenciaController::class, 'import'])->name('asistencias.import');
 
     // 2. Ruta RESOURCE GENÉRICA (Debe ir al final para evitar el conflicto)
-    // Dejamos solo el método 'index' para mostrar la vista con el formulario.
     Route::resource('asistencias', AsistenciaController::class)->only(['index']);
 
 
@@ -62,7 +62,12 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('permisos/reporte/vacaciones', [PermisoController::class, 'reporteVacaciones'])
     ->name('permisos.reporte.vacaciones');
-
+    
+    // =================================================================
+    // >>> 2. NUEVA RUTA: MÓDULO DE FERIADOS (CRUD) <<<
+    // =================================================================
+    Route::resource('feriados', FeriadoController::class);
+    
     // Módulo de Usuarios (CRUD completo)
     Route::resource('usuarios', UsuarioController::class);
     
@@ -70,26 +75,26 @@ Route::middleware(['auth'])->group(function () {
     
     // GET (Reporte)
     Route::get('subsidios/reporte/{empleado}', [SubsidioController::class, 'reportePorEmpleado'])
-             ->name('subsidios.reporte');
+                 ->name('subsidios.reporte');
     
     // GET (Crear)
     Route::get('subsidios/crear/{empleado}', [SubsidioController::class, 'create'])
-             ->name('subsidios.create');
+                 ->name('subsidios.create');
 
     // POST (Guardar)
     Route::post('subsidios', [SubsidioController::class, 'store'])
-             ->name('subsidios.store');
-             
-    // --- NUEVO --- GET (Editar)
+                 ->name('subsidios.store');
+                 
+    // GET (Editar)
     Route::get('subsidios/{subsidio}/edit', [SubsidioController::class, 'edit'])
-             ->name('subsidios.edit');
+                 ->name('subsidios.edit');
     
-    // --- NUEVO --- PUT/PATCH (Actualizar)
+    // PUT/PATCH (Actualizar)
     Route::put('subsidios/{subsidio}', [SubsidioController::class, 'update'])
-             ->name('subsidios.update');
+                 ->name('subsidios.update');
 
-    // --- NUEVO --- DELETE (Eliminar)
+    // DELETE (Eliminar)
     Route::delete('subsidios/{subsidio}', [SubsidioController::class, 'destroy'])
-             ->name('subsidios.destroy');
+                 ->name('subsidios.destroy');
     // --- FIN ---
 });

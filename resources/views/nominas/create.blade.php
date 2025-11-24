@@ -45,7 +45,8 @@
         <div class="periodo-data">
             <h4>Datos Generales del Periodo</h4>
             <div class="form-row">
-                <div class="form-group col-md-3">
+                {{-- 1. Mes --}}
+                <div class="form-group col-md-2">
                     <label for="mes">Mes *</label>
                     <select class="form-control @error('mes') is-invalid @enderror" id="mes" name="mes" required>
                         <option value="">Seleccionar mes</option>
@@ -61,7 +62,8 @@
                     @enderror
                 </div>
                 
-                <div class="form-group col-md-3">
+                {{-- 2. Año --}}
+                <div class="form-group col-md-2">
                     <label for="anio">Año *</label>
                     <select class="form-control @error('anio') is-invalid @enderror" id="anio" name="anio" required>
                         <option value="">Seleccionar año</option>
@@ -74,6 +76,7 @@
                     @enderror
                 </div>
                 
+                {{-- 3. Días Pagados (Input para el cálculo del Jornal) --}}
                 <div class="form-group col-md-2">
                     <label for="dias_pagados">Días Pagados *</label>
                     <input type="text" class="form-control integer-input @error('dias_pagados') is-invalid @enderror" id="dias_pagados" name="dias_pagados" 
@@ -83,6 +86,7 @@
                     @enderror
                 </div>
                 
+                {{-- 4. Horas Pagadas (Input general de horas) --}}
                 <div class="form-group col-md-2">
                     <label for="horas_pagadas">Horas Pagadas *</label>
                     <input type="text" class="form-control integer-input @error('horas_pagadas') is-invalid @enderror" id="horas_pagadas" name="horas_pagadas" 
@@ -92,12 +96,16 @@
                     @enderror
                 </div>
 
+                {{-- 5. SMN General (Input para copiado masivo) --}}
                 <div class="form-group col-md-2">
                     <label for="smn_comun">SMN General (Bs)</label>
                     <input type="text" class="form-control decimal-input" id="smn_comun" 
                            placeholder="0.00" onchange="aplicarSMNGeneral()">
                     <small class="form-text text-muted">Aplica a todos los empleados</small>
                 </div>
+                
+                {{-- NOTA: La duplicación del campo "Horas Pagadas" se ha ELIMINADO de aquí. --}}
+
             </div>
         </div>
         
@@ -112,12 +120,18 @@
                         <th>Haber Básico (Bs)</th>
                         <th>Horas Extras</th>
                         <th>Bono Antigüedad (Bs)</th>
-                        <th>Trab. Extra (Bs)</th> {{-- Este es el campo de MONTO (Bs) --}}
+                        <th>Trab. Extra (Bs)</th>
                         <th>Pago Domingo (Bs)</th>
                         <th>Otros Bonos (Bs)</th>
                         <th class="col-total-ganado">Total Ganado (Bs)</th>
                         <th>Aporte Laboral (Bs)</th>
                         <th>Aporte Solidario (Bs)</th>
+                        
+                        {{-- CAMPOS INDIVIDUALES RC-IVA --}}
+                        <th>Total F-110 (Bs)</th>
+                        <th>Saldo Ant. (Bs)</th>
+                        <th>Saldo Sig. (Bs)</th>
+
                         <th>RC IVA (Bs)</th>
                         <th>Anticipos (Bs)</th>
                         <th class="col-total-descuento">Total Descuento (Bs)</th>
@@ -177,36 +191,35 @@
                         <td>
                             <input type="text" name="empleados[{{ $empleadoIndex }}][horas_extras]" 
                                    class="form-control integer-input no-spinner @error($errorBase . '.horas_extras') is-invalid @enderror" 
-                                   value="{{ old($errorBase . '.horas_extras', 0) }}" 
-                                   placeholder="0" oninput="calcularTotal(this)"> {{-- oninput llama al recálculo --}}
+                                   value="{{ old('horas_extras', 0) }}" 
+                                   placeholder="0" oninput="calcularTotal(this)"> 
                             @error($errorBase . '.horas_extras') <small class="text-danger">{{ $message }}</small> @enderror
                         </td>
                         
-                        {{-- BONO ANTIGUEDAD (Numeric) --}}
+                        {{-- BONO ANTIGUEDAD (Numeric) - AHORA READONLY --}}
                         <td>
                             <input type="text" name="empleados[{{ $empleadoIndex }}][bono_antiguedad]" 
                                    class="form-control decimal-input bono-antiguedad-input @error($errorBase . '.bono_antiguedad') is-invalid @enderror" 
-                                   value="{{ old($errorBase . '.bono_antiguedad', 0) }}" 
-                                   placeholder="0.00" oninput="calcularTotal(this)">
+                                   value="{{ old('bono_antiguedad', 0) }}" 
+                                   placeholder="0.00" readonly tabindex="-1"> 
                             @error($errorBase . '.bono_antiguedad') <small class="text-danger">{{ $message }}</small> @enderror
                         </td>
 
-                        {{-- === CAMBIO: TRABAJO EXTRAORDINARIO (Bs) - AHORA CALCULADO === --}}
+                        {{-- TRABAJO EXTRAORDINARIO (Bs) - CALCULADO/OUTPUT --}}
                         <td>
                             <input type="text" name="empleados[{{ $empleadoIndex }}][trabajo_extraordinario]" 
-                                   class="form-control decimal-input @error($errorBase . '.trabajo_extraordinario') is-invalid @enderror" 
-                                   value="{{ old($errorBase . '.trabajo_extraordinario', 0) }}" 
+                                   class="form-control decimal-input trabajo-extra-input @error($errorBase . '.trabajo_extraordinario') is-invalid @enderror" 
+                                   value="{{ old('trabajo_extraordinario', 0) }}" 
                                    placeholder="0.00" 
-                                   readonly tabindex="-1"> {{-- Se vuelve readonly --}}
+                                   readonly tabindex="-1"> 
                             @error($errorBase . '.trabajo_extraordinario') <small class="text-danger">{{ $message }}</small> @enderror
                         </td>
-                        {{-- === FIN DEL CAMBIO === --}}
 
                         {{-- PAGO DOMINGO (Numeric) --}}
                         <td>
                             <input type="text" name="empleados[{{ $empleadoIndex }}][pago_domingo]" 
                                    class="form-control decimal-input @error($errorBase . '.pago_domingo') is-invalid @enderror" 
-                                   value="{{ old($errorBase . '.pago_domingo', 0) }}" 
+                                   value="{{ old('pago_domingo', 0) }}" 
                                    placeholder="0.00" oninput="calcularTotal(this)">
                             @error($errorBase . '.pago_domingo') <small class="text-danger">{{ $message }}</small> @enderror
                         </td>
@@ -215,7 +228,7 @@
                         <td>
                             <input type="text" name="empleados[{{ $empleadoIndex }}][otros_bonos]" 
                                    class="form-control decimal-input @error($errorBase . '.otros_bonos') is-invalid @enderror" 
-                                   value="{{ old($errorBase . '.otros_bonos', 0) }}" 
+                                   value="{{ old('otros_bonos', 0) }}" 
                                    placeholder="0.00" oninput="calcularTotal(this)">
                             @error($errorBase . '.otros_bonos') <small class="text-danger">{{ $message }}</small> @enderror
                         </td>
@@ -230,7 +243,7 @@
                         <td>
                             <input type="text" name="empleados[{{ $empleadoIndex }}][aporte_laboral]" 
                                    class="form-control decimal-input aporte-laboral-input @error($errorBase . '.aporte_laboral') is-invalid @enderror" 
-                                   value="{{ old($errorBase . '.aporte_laboral', 0) }}" 
+                                   value="{{ old('aporte_laboral', 0) }}" 
                                    placeholder="0.00" readonly tabindex="-1">
                             @error($errorBase . '.aporte_laboral') <small class="text-danger">{{ $message }}</small> @enderror
                         </td>
@@ -239,17 +252,43 @@
                         <td>
                             <input type="text" name="empleados[{{ $empleadoIndex }}][aporte_nacional_solidario]" 
                                    class="form-control decimal-input ans-input @error($errorBase . '.aporte_nacional_solidario') is-invalid @enderror" 
-                                   value="{{ old($errorBase . '.aporte_nacional_solidario', 0) }}" 
+                                   value="{{ old('aporte_nacional_solidario', 0) }}" 
                                    placeholder="0.00" readonly tabindex="-1">
                             @error($errorBase . '.aporte_nacional_solidario') <small class="text-danger">{{ $message }}</small> @enderror
                         </td>
 
-                        {{-- RC IVA (Numeric) --}}
+                        {{-- INPUT: Total F-110 (INPUT INDIVIDUAL) --}}
+                        <td>
+                            <input type="text" name="empleados[{{ $empleadoIndex }}][rc_iva_f110_monto]" 
+                                   class="form-control decimal-input rc-iva-f110-monto-input @error($errorBase . '.rc_iva_f110_monto') is-invalid @enderror" 
+                                   value="{{ old('rc_iva_f110_monto', 0) }}" 
+                                   placeholder="0.00" oninput="calcularTotal(this)">
+                            @error($errorBase . '.rc_iva_f110_monto') <small class="text-danger">{{ $message }}</small> @enderror
+                        </td>
+
+                        {{-- INPUT: Saldo Anterior (INPUT INDIVIDUAL) --}}
+                        <td>
+                            <input type="text" name="empleados[{{ $empleadoIndex }}][rc_iva_saldo_anterior]" 
+                                   class="form-control decimal-input rc-iva-saldo-anterior-input @error($errorBase . '.rc_iva_saldo_anterior') is-invalid @enderror" 
+                                   value="{{ old('rc_iva_saldo_anterior', 0) }}" 
+                                   placeholder="0.00" oninput="calcularTotal(this)">
+                            @error($errorBase . '.rc_iva_saldo_anterior') <small class="text-danger">{{ $message }}</small> @enderror
+                        </td>
+                        
+                        {{-- OUTPUT: Saldo Siguiente (Bloqueado) --}}
+                        <td>
+                            <input type="text" name="empleados[{{ $empleadoIndex }}][rc_iva_saldo_siguiente]" 
+                                   class="form-control decimal-input rc-iva-saldo-siguiente-input" 
+                                   value="0.00" readonly tabindex="-1">
+                        </td>
+
+
+                        {{-- RC IVA (Numeric - Calculado) --}}
                         <td>
                             <input type="text" name="empleados[{{ $empleadoIndex }}][rc_iva]" 
-                                   class="form-control decimal-input @error($errorBase . '.rc_iva') is-invalid @enderror" 
-                                   value="{{ old($errorBase . '.rc_iva', 0) }}" 
-                                   placeholder="0.00" oninput="calcularTotal(this)">
+                                   class="form-control decimal-input rc-iva-input @error($errorBase . '.rc_iva') is-invalid @enderror" 
+                                   value="{{ old('rc_iva', 0) }}" 
+                                   placeholder="0.00" readonly tabindex="-1">
                             @error($errorBase . '.rc_iva') <small class="text-danger">{{ $message }}</small> @enderror
                         </td>
                         
@@ -257,7 +296,7 @@
                         <td>
                             <input type="text" name="empleados[{{ $empleadoIndex }}][anticipos]" 
                                    class="form-control decimal-input @error($errorBase . '.anticipos') is-invalid @enderror" 
-                                   value="{{ old($errorBase . '.anticipos', 0) }}" 
+                                   value="{{ old('anticipos', 0) }}" 
                                    placeholder="0.00" oninput="calcularTotal(this)">
                             @error($errorBase . '.anticipos') <small class="text-danger">{{ $message }}</small> @enderror
                         </td>
@@ -309,7 +348,7 @@
 .form-group { flex: 1; min-width: 150px; }
 .form-actions { margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 1.5rem; display: flex; justify-content: flex-end; gap: 10px; }
 .table-container { overflow-x: auto; }
-table { min-width: 1800px; border-collapse: collapse; margin-top: 1rem; }
+table { min-width: 2200px; border-collapse: collapse; margin-top: 1rem; }
 th, td { white-space: nowrap; padding: 8px; font-size: 0.9em; border: 1px solid #ddd; vertical-align: top; }
 th { background-color: #942044; color: white; }
 .form-control { width: 100%; box-sizing: border-box; }
@@ -324,7 +363,10 @@ th { background-color: #942044; color: white; }
 .form-control.ans-input,
 .total-ganado-display,
 .total-descuento-display,
-input[name*="[trabajo_extraordinario]"] { /* Aplicar estilo readonly también al campo de trabajo extra */
+input[name*="[trabajo_extraordinario]"],
+input[name*="[rc_iva_saldo_siguiente]"], /* Nuevo campo readonly */
+input[name*="[rc_iva]"], /* RC-IVA es de salida */
+input[name*="[bono_antiguedad]"] { /* CORRECCIÓN: Bono Antigüedad debe ser readonly */
     background-color: #e9ecef !important;
     opacity: 1;
     cursor: not-allowed;

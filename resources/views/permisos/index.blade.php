@@ -8,10 +8,15 @@
         {{-- INICIO DEL BLOQUE ACTUALIZADO --}}
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
             <h2>Lista de Solicitudes de Permiso</h2>
-            {{-- Contenedor para alinear los dos botones a la derecha --}}
+            {{-- Contenedor para alinear los tres botones a la derecha --}}
             <div style="display: flex; gap: 10px;">
                 
-                {{-- NUEVO BOTÓN: Enlace al Reporte de Saldo de Vacaciones --}}
+                {{-- NUEVO BOTÓN AÑADIDO: Gestión de Feriados --}}
+                <a href="{{ route('feriados.index') }}" class="btn btn-secondary" style="background-color: #f0ad4e; color: white;">
+                    <i class="fas fa-calendar-check"></i> Gestionar Feriados
+                </a>
+                
+                {{-- Botón para Reporte de Saldo de Vacaciones --}}
                 <a href="{{ route('permisos.reporte.vacaciones') }}" class="btn btn-secondary" style="background-color: #007bff; color: white;">
                     <i class="fas fa-chart-bar"></i> Ver Reporte de Saldo
                 </a>
