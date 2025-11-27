@@ -9,7 +9,9 @@ use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\PermisoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\SubsidioController; 
-use App\Http\Controllers\FeriadoController; // <<< 1. NUEVA INCLUSIÓN
+use App\Http\Controllers\FeriadoController;
+use App\Http\Controllers\DashboardController; // <<< INCLUSIÓN DEL DASHBOARD CONTROLLER
+
 use Illuminate\Support\Facades\Route;
 
 // Rutas de autenticación
@@ -19,10 +21,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Rutas protegidas por middleware 'auth'
 Route::middleware(['auth'])->group(function () {
-    // Dashboard
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    
+    // Dashboard (USA EL CONTROLADOR)
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard'); 
 
     // Módulo de Empresas (CRUD completo)
     Route::resource('empresas', EmpresaController::class);
@@ -39,62 +40,42 @@ Route::middleware(['auth'])->group(function () {
     Route::get('planillas/generar/{tipo}/{formato}', [PlanillaController::class, 'generar'])->name('planillas.generar');
 
     // =================================================================
-    // MÓDULO DE ASISTENCIA: RUTA ESPECÍFICA DE REPORTE DEBE IR PRIMERO
+    // MÓDULO DE ASISTENCIA
     // =================================================================
-    
-    // 1. Rutas ESPECÍFICAS (Reporte e Importación)
-    
-    // GET para mostrar el formulario de filtro del reporte
     Route::get('asistencias/reporte', [AsistenciaController::class, 'showReporte'])->name('asistencias.reporte');
-    
-    // POST para procesar el filtro y mostrar los datos del reporte
     Route::post('asistencias/reporte', [AsistenciaController::class, 'generarReporte'])->name('asistencias.generar');
-    
-    // POST para la importación del archivo (de tu formulario)
     Route::post('asistencias/importar', [AsistenciaController::class, 'import'])->name('asistencias.import');
-
-    // 2. Ruta RESOURCE GENÉRICA (Debe ir al final para evitar el conflicto)
     Route::resource('asistencias', AsistenciaController::class)->only(['index']);
 
 
-    // Módulo de Permisos (sustituye a vacaciones)
+    // Módulo de Permisos
     Route::resource('permisos', PermisoController::class);
+    Route::get('permisos/reporte/vacaciones', [PermisoController::class, 'reporteVacaciones'])->name('permisos.reporte.vacaciones');
     
-    Route::get('permisos/reporte/vacaciones', [PermisoController::class, 'reporteVacaciones'])
-    ->name('permisos.reporte.vacaciones');
-    
-    // =================================================================
-    // >>> 2. NUEVA RUTA: MÓDULO DE FERIADOS (CRUD) <<<
-    // =================================================================
+    // Módulo de Feriados
     Route::resource('feriados', FeriadoController::class);
     
-    // Módulo de Usuarios (CRUD completo)
+    // Módulo de Usuarios
     Route::resource('usuarios', UsuarioController::class);
     
-    // --- GRUPO DE SUBSIDIOS ACTUALIZADO ---
+    // --- GRUPO DE SUBSIDIOS (Sintaxis simplificada y segura) ---
     
     // GET (Reporte)
-    Route::get('subsidios/reporte/{empleado}', [SubsidioController::class, 'reportePorEmpleado'])
-                 ->name('subsidios.reporte');
+    Route::get('subsidios/reporte/{empleado}', [SubsidioController::class, 'reportePorEmpleado'])->name('subsidios.reporte');
     
     // GET (Crear)
-    Route::get('subsidios/crear/{empleado}', [SubsidioController::class, 'create'])
-                 ->name('subsidios.create');
+    Route::get('subsidios/crear/{empleado}', [SubsidioController::class, 'create'])->name('subsidios.create');
 
     // POST (Guardar)
-    Route::post('subsidios', [SubsidioController::class, 'store'])
-                 ->name('subsidios.store');
-                 
+    Route::post('subsidios', [SubsidioController::class, 'store'])->name('subsidios.store');
+    
     // GET (Editar)
-    Route::get('subsidios/{subsidio}/edit', [SubsidioController::class, 'edit'])
-                 ->name('subsidios.edit');
+    Route::get('subsidios/{subsidio}/edit', [SubsidioController::class, 'edit'])->name('subsidios.edit');
     
     // PUT/PATCH (Actualizar)
-    Route::put('subsidios/{subsidio}', [SubsidioController::class, 'update'])
-                 ->name('subsidios.update');
+    Route::put('subsidios/{subsidio}', [SubsidioController::class, 'update'])->name('subsidios.update');
 
     // DELETE (Eliminar)
-    Route::delete('subsidios/{subsidio}', [SubsidioController::class, 'destroy'])
-                 ->name('subsidios.destroy');
-    // --- FIN ---
-});
+    Route::delete('subsidios/{subsidio}', [SubsidioController::class, 'destroy'])->name('subsidios.destroy');
+    
+}); // <<< Cierre final del Route::middleware(['auth'])

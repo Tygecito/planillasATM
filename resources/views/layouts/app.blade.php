@@ -16,8 +16,14 @@
 </head>
 <body>
     <header class="header">
-        <div class="logo">SISTEMA WEB PARA LA GESTIÓN DE PERSONAL Y NÓMINAS</div>
+        <div class="logo">
+            <a href="{{ route('dashboard') }}">
+                <img src="{{ asset('img/logo.png') }}" alt="Logo de la Empresa" class="header-logo-img">
+                SISTEMA WEB PARA LA GESTIÓN DE PERSONAL Y NÓMINAS
+            </a>
+            </div>
         <div class="user-info">
+            
             @if (Auth::check())
                 @php
                     $user = Auth::user();
@@ -107,7 +113,7 @@
     </div>
     
     <footer class="footer">
-        <p>&copy; 2025 Mi Aplicación Laravel. Versión 1.0.0</p>
+        <p>&copy; 2025 Versión 1.0.0</p>
     </footer>
 
     <!-- Scripts comunes -->

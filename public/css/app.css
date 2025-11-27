@@ -93,3 +93,28 @@ tr:hover { background-color: #f5f5f5; }
     font-size: 16px; /* Tamaño de fuente */
     color: #efecec; /* Color del texto */
 }
+
+/* --- ESTILOS AGREGADOS PARA EL LOGO EN LA CABECERA --- */
+
+/* Asegura que el logo y el texto estén alineados y que el enlace no tenga subrayado */
+.logo a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white; /* Hereda el color del texto si lo tenías */
+}
+
+/* Estilo específico para la imagen del logo */
+/* Estilo específico para la imagen del logo */
+.header-logo-img {
+    height: 40px; /* Tamaño del logo */
+    width: auto;
+    margin-right: 15px; /* Espacio entre el logo y el texto */
+    vertical-align: middle;
+    
+    /* --- CAMBIOS PARA EL CONTRASTE --- */
+    background-color: white; /* Fondo blanco */
+    border-radius: 50%; /* Lo hace circular */
+    padding: 5px; /* Pequeño espacio entre el logo y el borde blanco */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3); /* Sombra sutil para "levantarlo" */
+}
